@@ -94,7 +94,7 @@ except:
 }
 
 # ---- 面板 Markup ----
-PANEL_MARKUP='{"inline_keyboard":[[{"text":"📋 系統檢查","callback_data":"sys_check"},{"text":"🔍 偵測活動","callback_data":"detect"}],[{"text":"📊 任務狀態","callback_data":"task_status"},{"text":"🧹 快速巡檢","callback_data":"heal_check"}],[{"text":"🔄 重啟 Gateway","callback_data":"restart_gw"},{"text":"🔄 重啟任務板","callback_data":"restart_tb"}],[{"text":"🔧 自動修復","callback_data":"heal_fix"},{"text":"🛡️ CR-7 掃描","callback_data":"heal_cr7"}],[{"text":"🛑 緊急停止","callback_data":"emergency_stop"},{"text":"📖 指令清單","callback_data":"help"}]]}'
+PANEL_MARKUP='{"inline_keyboard":[[{"text":"📋 系統檢查","callback_data":"sys_check"},{"text":"🔍 偵測活動","callback_data":"detect"}],[{"text":"📊 任務狀態","callback_data":"task_status"},{"text":"🧹 快速巡檢","callback_data":"heal_check"}],[{"text":"🔄 重啟 Gateway","callback_data":"restart_gw"},{"text":"🔄 重啟任務板","callback_data":"restart_tb"}],[{"text":"🔧 自動修復","callback_data":"heal_fix"},{"text":"🛡️ CR-7 掃描","callback_data":"heal_cr7"}],[{"text":"⏪ 回滾到驗證版","callback_data":"rollback"},{"text":"📖 指令清單","callback_data":"help"}],[{"text":"🛑 緊急停止","callback_data":"emergency_stop"}]]}'
 BACK_MARKUP='{"inline_keyboard":[[{"text":"🔙 返回面板","callback_data":"show_panel"}]]}'
 
 # ---- 送出面板 ----
@@ -454,6 +454,102 @@ ${result}" "$BACK_MARKUP"
 所有 Agent 可以繼續工作。" "$BACK_MARKUP"
       ;;
 
+    # ==================== ⏪ 回滾到驗證版 ====================
+    rollback)
+      # 先列出目前的驗證標籤和未提交變更
+      edit_msg "$chat_id" "$msg_id" "⏪ 正在檢查回滾資訊..." "$BACK_MARKUP"
+
+      local latest_tag dirty_files tag_info
+      latest_tag=$(cd "$WORKSPACE" && git tag -l "verified-*" --sort=-version:refname | head -1)
+      dirty_files=$(cd "$WORKSPACE" && git diff --name-only 2>/dev/null | head -10)
+      local dirty_untracked
+      dirty_untracked=$(cd "$WORKSPACE" && git ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
+
+      if [ -z "$latest_tag" ]; then
+        edit_msg "$chat_id" "$msg_id" "⏪ *回滾*
+
+❌ 找不到任何 verified-* 標籤
+請先由 Claude Code 打標籤" "$BACK_MARKUP"
+        return
+      fi
+
+      tag_info=$(cd "$WORKSPACE" && git log "$latest_tag" --oneline -1 2>/dev/null)
+      local current_head
+      current_head=$(cd "$WORKSPACE" && git log --oneline -1 2>/dev/null)
+      local commits_ahead
+      commits_ahead=$(cd "$WORKSPACE" && git rev-list "${latest_tag}..HEAD" --count 2>/dev/null)
+
+      local status_text="⏪ *回滾到驗證版本*
+
+🏷️ 最新驗證標籤: ${latest_tag}
+📌 標籤內容: ${tag_info}
+📍 目前 HEAD: ${current_head}
+📏 距離驗證版: ${commits_ahead} 個 commit"
+
+      if [ -n "$dirty_files" ]; then
+        status_text="${status_text}
+
+⚠️ 有未提交的修改:
+${dirty_files}"
+      fi
+
+      if [ "$dirty_untracked" -gt 0 ]; then
+        status_text="${status_text}
+📁 ${dirty_untracked} 個未追蹤檔案"
+      fi
+
+      if [ "$commits_ahead" = "0" ] && [ -z "$dirty_files" ]; then
+        status_text="${status_text}
+
+✅ 目前已經在驗證版本，不需要回滾"
+        edit_msg "$chat_id" "$msg_id" "$status_text" "$BACK_MARKUP"
+      else
+        status_text="${status_text}
+
+⚠️ 回滾會丟棄驗證版之後的所有變更！"
+        local markup='{"inline_keyboard":[[{"text":"✅ 確認回滾到 '"${latest_tag}"'","callback_data":"confirm_rollback"}],[{"text":"❌ 取消","callback_data":"show_panel"}]]}'
+        edit_msg "$chat_id" "$msg_id" "$status_text" "$markup"
+      fi
+      ;;
+
+    confirm_rollback)
+      edit_msg "$chat_id" "$msg_id" "⏪ 正在回滾..." "$BACK_MARKUP"
+
+      local latest_tag
+      latest_tag=$(cd "$WORKSPACE" && git tag -l "verified-*" --sort=-version:refname | head -1)
+
+      if [ -z "$latest_tag" ]; then
+        edit_msg "$chat_id" "$msg_id" "❌ 找不到驗證標籤" "$BACK_MARKUP"
+        return
+      fi
+
+      # 先備份當前狀態
+      local backup_branch="backup-before-rollback-$(date +%Y%m%d-%H%M%S)"
+      cd "$WORKSPACE"
+      git stash --include-untracked -m "telegram-panel rollback backup" 2>/dev/null
+      git branch "$backup_branch" 2>/dev/null
+
+      # 執行回滾
+      git checkout "$latest_tag" -- . 2>/dev/null
+      git checkout "$latest_tag" -- AGENTS.md scripts/self-heal.sh scripts/telegram-panel.sh 2>/dev/null
+
+      local result_text="⏪ *回滾完成*
+
+🏷️ 已回滾到: ${latest_tag}
+💾 備份分支: ${backup_branch}
+
+已恢復的關鍵檔案:
+- AGENTS.md
+- scripts/self-heal.sh
+- scripts/telegram-panel.sh
+
+⚠️ 回滾後建議:
+1. 按「🧹快速巡檢」確認狀態
+2. 如需恢復，用 git stash pop"
+
+      edit_msg "$chat_id" "$msg_id" "$result_text" "$BACK_MARKUP"
+      ;;
+
     # ==================== 📖 指令清單 ====================
     help)
       edit_msg "$chat_id" "$msg_id" "📖 *OpenClaw 救援面板*
@@ -467,6 +563,7 @@ ${result}" "$BACK_MARKUP"
 🧹 快速巡檢 → 執行 self-heal.sh check
 🔧 自動修復 → 執行 self-heal.sh fix
 🛡️ CR-7 掃描 → 偵測未授權自動化
+⏪ 回滾驗證版 → 恢復到上次驗證的狀態
 🛑 緊急停止 → 停止所有 Agent
 
 *Telegram 指令：*

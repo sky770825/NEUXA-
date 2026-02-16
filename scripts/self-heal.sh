@@ -1,11 +1,12 @@
 #!/bin/zsh
-# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.1
-# 對應 AGENTS.md v1.3.1 危機處理守則 CR-1~CR-7
+# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.2
+# 對應 AGENTS.md v1.4 危機處理守則 CR-1~CR-7
 # 用法：
 #   ./scripts/self-heal.sh              # 全部檢查
 #   ./scripts/self-heal.sh check        # 只檢查不修復
 #   ./scripts/self-heal.sh fix          # 檢查 + 自動修復（綠燈項目）
-#   ./scripts/self-heal.sh <CR編號>     # 只跑特定檢查，如 cr1, cr2, cr3, cr4, cr5
+#   ./scripts/self-heal.sh rollback     # 回滾到上次驗證版本
+#   ./scripts/self-heal.sh <CR編號>     # 只跑特定檢查，如 cr1, cr2, cr3, cr4, cr5, cr7
 
 set -uo pipefail
 setopt nullglob 2>/dev/null || true  # zsh: no error on empty glob
@@ -455,6 +456,49 @@ case "$MODE" in
   cr4) check_cr4 ;;
   cr5) check_cr5 ;;
   cr7) check_cr7 ;;
+  rollback)
+    echo "${BLUE}━━━ 回滾到驗證版本 ━━━${NC}"
+    local latest_tag
+    latest_tag=$(git -C "$WORKSPACE" tag -l "verified-*" --sort=-version:refname | head -1)
+    if [ -z "$latest_tag" ]; then
+      echo "${RED}❌ 找不到任何 verified-* 標籤${NC}"
+      echo "請先由 Claude Code 執行: git tag -a verified-vX.X -m '描述'"
+      exit 1
+    fi
+    echo "🏷️  最新驗證標籤: ${latest_tag}"
+    echo "📌 標籤內容: $(git -C "$WORKSPACE" log "$latest_tag" --oneline -1)"
+    echo "📍 目前 HEAD: $(git -C "$WORKSPACE" log --oneline -1)"
+    local commits_ahead
+    commits_ahead=$(git -C "$WORKSPACE" rev-list "${latest_tag}..HEAD" --count)
+    echo "📏 距離驗證版: ${commits_ahead} 個 commit"
+    echo ""
+    if [ "$commits_ahead" = "0" ]; then
+      echo "${GREEN}✅ 目前已經在驗證版本，不需要回滾${NC}"
+      exit 0
+    fi
+    echo "${YELLOW}⚠️  即將回滾到 ${latest_tag}${NC}"
+    echo "  這會恢復以下關鍵檔案到驗證版本："
+    echo "  - AGENTS.md"
+    echo "  - scripts/self-heal.sh"
+    echo "  - scripts/telegram-panel.sh"
+    echo ""
+    echo -n "確定要回滾嗎？(y/N) "
+    read -r confirm
+    if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+      local backup_branch="backup-before-rollback-$(date +%Y%m%d-%H%M%S)"
+      cd "$WORKSPACE"
+      git stash --include-untracked -m "self-heal rollback backup" 2>/dev/null
+      git branch "$backup_branch" 2>/dev/null
+      git checkout "$latest_tag" -- AGENTS.md scripts/self-heal.sh scripts/telegram-panel.sh 2>/dev/null
+      echo ""
+      echo "${GREEN}✅ 回滾完成${NC}"
+      echo "💾 備份分支: ${backup_branch}"
+      echo "如需恢復: git stash pop"
+    else
+      echo "已取消"
+    fi
+    exit 0
+    ;;
   check|fix)
     check_infra
     check_cr2
@@ -465,16 +509,17 @@ case "$MODE" in
     check_cr7
     ;;
   *)
-    echo "用法: $0 [check|fix|cr1|cr2|cr3|cr4|cr5]"
+    echo "用法: $0 [check|fix|rollback|cr1|cr2|cr3|cr4|cr5|cr7]"
     echo ""
-    echo "  check  - 只檢查不修復（預設）"
-    echo "  fix    - 檢查 + 自動修復綠燈項目"
-    echo "  cr1    - 只跑知識庫品質檢查"
-    echo "  cr2    - 只跑根目錄污染檢查"
-    echo "  cr3    - 只跑任務板一致性"
-    echo "  cr4    - 只跑 n8n 迴路"
-    echo "  cr5    - 只跑 evidenceLinks 驗證"
-    echo "  cr7    - 只跑未授權自動化偵測"
+    echo "  check    - 只檢查不修復（預設）"
+    echo "  fix      - 檢查 + 自動修復綠燈項目"
+    echo "  rollback - 回滾到上次驗證版本（verified-* tag）"
+    echo "  cr1      - 只跑知識庫品質檢查"
+    echo "  cr2      - 只跑根目錄污染檢查"
+    echo "  cr3      - 只跑任務板一致性"
+    echo "  cr4      - 只跑 n8n 迴路"
+    echo "  cr5      - 只跑 evidenceLinks 驗證"
+    echo "  cr7      - 只跑未授權自動化偵測"
     exit 0
     ;;
 esac
