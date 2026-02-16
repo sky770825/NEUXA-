@@ -1,9 +1,9 @@
-# AGENTS.md - 工作指南 v1.3.2
+# AGENTS.md - 工作指南 v1.4
 
-> **版本**: v1.3.2
+> **版本**: v1.4
 > **定版日期**: 2026-02-16
-> **變更摘要**: 新增任務必填 10 欄位規範 + Telegram 救援面板
-> **上一版本**: v1.3.1
+> **變更摘要**: 中改 — 新增 SOP-6~10 + 清理危險腳本 + 強化安全規範
+> **上一版本**: v1.3.2
 > **適用範圍**: 所有 Agent（小蔡、Claude、子 Agent）
 
 ---
@@ -469,6 +469,132 @@ CRM 專案  → projects/crm/modules/main/
 7. 回報清理結果給老蔡
 ```
 
+### SOP-6: 資料庫操作（v1.4 新增）
+
+```
+觸發：需要直接操作 Postgres / Qdrant / SQLite 等資料庫
+前提：必須知道操作的影響範圍
+
+1. 操作前：
+   - 說明要改哪個資料庫、哪張表、什麼操作（SELECT/INSERT/UPDATE/DELETE）
+   - SELECT → 🟢 綠燈，直接做
+   - INSERT（新增資料）→ 🟡 黃燈，先說再做
+   - UPDATE/DELETE → 🔴 紅燈，必須老蔡批准
+
+2. UPDATE/DELETE 必須：
+   - 先跑 SELECT 確認影響筆數
+   - 告訴老蔡「會影響 N 筆資料」
+   - 老蔡批准後才執行
+   - 如果影響 >50 筆 → 必須先備份
+
+3. 禁止行為：
+   - ❌ DROP TABLE / DROP DATABASE
+   - ❌ 沒有 WHERE 的 UPDATE/DELETE
+   - ❌ 直接改 schema（加欄位、改欄位型別）未經批准
+   - ❌ 清空整個 collection（Qdrant）
+
+4. Qdrant 向量資料庫：
+   - 讀取/搜尋 → 🟢
+   - 寫入已有 collection → 🟢
+   - 建立新 collection → 🔴
+   - 刪除 collection → 🔴
+   - 重建索引 → 🟡（先說明會影響多少 chunks）
+```
+
+### SOP-7: Git 衝突處理（v1.4 新增）
+
+```
+觸發：git pull / git merge / git rebase 出現衝突
+前提：不可自行決定「保留誰的」
+
+1. 發現衝突 → 立即停止，不要嘗試自動解決
+2. 回報老蔡：
+   - 哪些檔案有衝突
+   - 衝突雙方的內容摘要（ours vs theirs）
+   - 建議保留哪邊（附理由）
+3. 等老蔡決定
+4. 老蔡批准後 → 手動解決衝突 → git add → git commit
+5. ⛔ 禁止行為：
+   - ❌ git checkout --ours / --theirs（自行決定）
+   - ❌ 衝突中繼續開發（先解衝突再動）
+   - ❌ git merge --abort 後假裝沒事
+```
+
+### SOP-8: 套件升級（v1.4 新增）
+
+```
+觸發：需要安裝或升級 npm/pip/brew 套件
+前提：升級可能引入破壞性變更
+
+1. 安裝新套件（npm install xxx）→ 🟡 黃燈
+   - 先說要裝什麼、為什麼需要
+   - 確認 package.json 不會被意外改動
+
+2. 升級既有套件 → 🔴 紅燈
+   - 先檢查 changelog / breaking changes
+   - 告訴老蔡：升什麼版本、有沒有 breaking change
+   - 老蔡批准 → 升級 → 跑 test → 確認沒壞
+
+3. 禁止行為：
+   - ❌ npm update（全部升級）未經批准
+   - ❌ 升級 major version 不看 changelog
+   - ❌ 刪除 lock file 重新安裝
+   - ❌ 安裝來路不明的套件（npm 下載數 <1000/週）
+```
+
+### SOP-9: 敏感資料處理（v1.4 新增）
+
+```
+觸發：碰到 API keys、tokens、passwords、credentials
+前提：洩漏 = 安全事件
+
+1. 敏感資料的位置規則：
+   ✅ 正確：.env 檔案、credentials/ 目錄、Docker secrets
+   ❌ 禁止：寫進 .md 文件、commit 到 git、貼在 Telegram
+
+2. 如果發現敏感資料外洩：
+   - 🔴 紅燈，立即回報老蔡
+   - 不要自行 rotate key（可能影響正在跑的服務）
+   - 記錄在哪發現、什麼類型的 key
+
+3. 使用 credentials 的規則：
+   - 讀取 .env → 🟢（正常使用）
+   - 新增 .env 變數 → 🟡（先說）
+   - 修改現有 key/token → 🔴（必須批准）
+
+4. Git 安全：
+   - commit 前自動檢查：不可包含 .env、*.key、*.pem
+   - 如果 git diff 出現 token/password → 停止，不要 commit
+   - 發現歷史 commit 有敏感資料 → 回報老蔡
+```
+
+### SOP-10: 跨 Agent 協作（v1.4 新增）
+
+```
+觸發：多個 Agent 同時在同一個 workspace 工作
+前提：避免互相覆蓋、重複工作
+
+1. 開始工作前：
+   - 檢查任務板 → 有沒有別的 Agent 在做相關任務
+   - 檢查 git status → 有沒有別人的未 commit 變更
+   - 如果有 → 先等對方完成，或跟老蔡確認
+
+2. 檔案鎖定規則：
+   - 同一個檔案不可以兩個 Agent 同時修改
+   - 如果需要改別人正在改的檔案 → 回報老蔡協調
+   - AGENTS.md / MEMORY.md 修改權 → 每次只有一個 Agent
+
+3. 任務板協作：
+   - 一個任務只能一個 Agent 負責（agent.type 欄位）
+   - 不可以搶別人的 running 任務
+   - 不可以幫別人的任務標 done（只有執行者能標）
+
+4. 通訊協定：
+   - Agent 之間不直接溝通，透過任務板 + 檔案系統
+   - 需要另一個 Agent 做事 → 建任務板任務，不要直接叫
+   - 發現另一個 Agent 的問題 → 回報老蔡，不要自行修
+```
+
 ---
 
 ## 🚑 危機處理守則（v1.3 新增）
@@ -652,6 +778,22 @@ CRM 專案  → projects/crm/modules/main/
 
 ## 📋 版本變更日誌
 
+### v1.4 (2026-02-16) - 定版
+**變更類型**: 中改 — 新增 5 個 SOP + 清理危險腳本 + 強化安全規範
+**變更原因**: (1) 審計發現缺少資料庫/Git衝突/套件升級/敏感資料/跨Agent 協作的 SOP (2) scripts/ 有 7 個違反 CR-7 的自動化腳本 (3) 根目錄 12 個非白名單目錄需清理
+
+| 項目 | 變更內容 |
+|------|---------|
+| ➕ 新增 | SOP-6: 資料庫操作規範（SELECT/INSERT/UPDATE/DELETE 分級） |
+| ➕ 新增 | SOP-7: Git 衝突處理（禁止自行決定保留哪邊） |
+| ➕ 新增 | SOP-8: 套件升級安全檢查（禁止全部升級、必看 changelog） |
+| ➕ 新增 | SOP-9: 敏感資料處理（credentials 位置規則 + 外洩處理） |
+| ➕ 新增 | SOP-10: 跨 Agent 協作（檔案鎖定 + 任務板協作規則） |
+| 🧹 清理 | 移除 7 個違反 CR-7 的腳本到 archive（autoexecutor 系列） |
+| 🧹 清理 | 移除 12 個非白名單目錄到 archive |
+
+**驗證狀態**: ✅ 老蔡確認，即日生效
+
 ### v1.3.2 (2026-02-16) - 定版
 **變更類型**: 小改 — 新增任務必填欄位規範 + 紅燈防繞過規則 + Telegram 救援面板
 **變更原因**: (1) taskCompliance.ts 驗證 10 個必填欄位，舊任務因缺少欄位被降級 draft (2) 小蔡慣用「先改再問」手法繞過紅燈審核 (3) 建立 Telegram 救援面板（@savetsai666bot）供老蔡遠端控制
@@ -773,4 +915,4 @@ CRM 專案  → projects/crm/modules/main/
 
 ---
 
-🤖 小蔡 | Agent 工作指南 v1.3.2 | 2026-02-16 定版
+🤖 小蔡 | Agent 工作指南 v1.4 | 2026-02-16 定版
