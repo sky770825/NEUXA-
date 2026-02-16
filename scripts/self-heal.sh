@@ -270,6 +270,9 @@ for t in tasks:
         for link in links:
             checked += 1
             path = link
+            # Handle file:// URLs
+            if path.startswith('file://'):
+                path = path[7:]  # Strip file:// prefix
             if not os.path.isabs(path):
                 path = os.path.expanduser('~/.openclaw/workspace/' + path)
             exists = os.path.isfile(path)
