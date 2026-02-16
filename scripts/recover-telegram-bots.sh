@@ -13,9 +13,9 @@ WORKSPACE="${HOME}/.openclaw/workspace"
 SKILL_DIR="${WORKSPACE}/skill-github-automation"
 ECOSYSTEM_FILE="${SKILL_DIR}/ecosystem.config.js"
 
-# Bot Tokens
-CAIJ_N8N_TOKEN="8357299731:AAHrBnVCEGjGy6b0g-3JhBArMnM9kt__Ncg"
-XIAOJI_CAI_TOKEN="8056783828:AAHJ4S5aIfcFbA9DlYsWGTSngUX7lhZ7xnY"
+# Bot Tokens — 從環境變數讀取，不要寫死
+CAIJ_N8N_TOKEN="${CAIJ_N8N_BOT_TOKEN:?請設定 CAIJ_N8N_BOT_TOKEN 環境變數}"
+XIAOJI_CAI_TOKEN="${XIAOJI_CAI_BOT_TOKEN:?請設定 XIAOJI_CAI_BOT_TOKEN 環境變數}"
 
 # 顏色輸出
 RED='\033[0;31m'

@@ -6,7 +6,7 @@ module.exports = {
       script: './scripts/xiaocai-maintenance-bot.js',
       cwd: '/Users/caijunchang/.openclaw/workspace/skill-github-automation',
       env: {
-        XIAOCAI_BOT_TOKEN: '8225683676:AAGpSInSbU0P54Xycv6OB0Gr3QoTcl9HuH0',
+        XIAOCAI_BOT_TOKEN: process.env.XIAOCAI_BOT_TOKEN || '',
         ADMIN_CHAT_ID: '5819565005'
       },
       instances: 1,

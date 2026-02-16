@@ -17,7 +17,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # --- 配置參數 ---
-TELEGRAM_BOT_TOKEN_BACKUP = '8225683676:AAHzwqmEmwctD7xZ38cTui4xnnO8mpwSkV4' # 老蔡的 Bot Token
+TELEGRAM_BOT_TOKEN_BACKUP = os.environ.get('OLLAMA_BOT_TOKEN', '') # 從環境變數讀取
 OLLAMA_API_URL = 'http://localhost:11434/api/chat'
 OLLAMA_MODEL_BACKUP = 'llama3.2'
 MAIN_GATEWAY_URL = 'http://localhost:18789/status' # OpenClaw Gateway 的狀態檢查點
