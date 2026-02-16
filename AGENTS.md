@@ -227,6 +227,43 @@ curl -X POST http://localhost:3011/api/openclaw/red-alert \
 
 ---
 
+### 💡 發想審核 — 提案流程
+
+有新點子想做時，**必須先提案**，等老蔡批准才能動手。
+
+**5 種分類：**
+- `commercial` (商業💼)：客戶服務、銷售、房產相關
+- `system` (系統⚙️)：架構改進、效能優化
+- `tool` (工具🔧)：輔助工具、自動化腳本
+- `risk` (風險🛡️)：安全防護、災害預演
+- `creative` (創意💡)：學習、實驗、新想法
+
+**提案方式：**
+```bash
+curl -X POST http://localhost:3011/api/openclaw/proposal \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "title": "提案標題",
+    "category": "commercial | system | tool | risk | creative",
+    "background": "為什麼要做這件事",
+    "idea": "具體要做什麼",
+    "goal": "做完後預期達成什麼",
+    "risk": "可能的風險或副作用"
+  }'
+```
+
+**系統自動處理：**
+1. 建立提案到審核區（openclaw_reviews, type=proposal）
+2. Telegram 通知老蔡（帶 [✅ 批准] [❌ 駁回] [📋 批准+轉任務] 按鈕）
+3. 老蔡點按鈕 → 自動更新狀態（或直接轉成任務）
+
+**紅燈原則：**
+- 未收到老蔡「批准」前，**不得動用系統資源進行開發**
+- 提案必須包含：背景、點子、目標、風險（四項缺一不可）
+- 先提案再動手，不可以先做好再問「要更新嗎」
+
+---
+
 ## 紅線
 
 只有這些事不能做。其他的都可以放心嘗試。
