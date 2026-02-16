@@ -1,0 +1,403 @@
+#!/bin/zsh
+# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.0
+# 對應 AGENTS.md v1.3 危機處理守則 CR-1~CR-6
+# 用法：
+#   ./scripts/self-heal.sh              # 全部檢查
+#   ./scripts/self-heal.sh check        # 只檢查不修復
+#   ./scripts/self-heal.sh fix          # 檢查 + 自動修復（綠燈項目）
+#   ./scripts/self-heal.sh <CR編號>     # 只跑特定檢查，如 cr1, cr2, cr3, cr4, cr5
+
+set -uo pipefail
+setopt nullglob 2>/dev/null || true  # zsh: no error on empty glob
+
+WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+API_BASE="${OPENCLAW_API_BASE:-http://localhost:3011}"
+MODE="${1:-check}"
+
+# 顏色
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+ISSUES=0
+FIXED=0
+WARNINGS=0
+
+log_ok()   { echo "${GREEN}[✅ OK]${NC} $1"; }
+log_warn() { echo "${YELLOW}[⚠️  WARN]${NC} $1"; WARNINGS=$((WARNINGS + 1)); }
+log_fail() { echo "${RED}[❌ FAIL]${NC} $1"; ISSUES=$((ISSUES + 1)); }
+log_fix()  { echo "${BLUE}[🔧 FIX]${NC} $1"; FIXED=$((FIXED + 1)); }
+log_head() { echo "\n${BLUE}━━━ $1 ━━━${NC}"; }
+
+# ============================================================
+# CR-2: workspace 根目錄污染檢查
+# ============================================================
+check_cr2() {
+  log_head "CR-2: workspace 根目錄檢查"
+
+  # 檢查項目：
+  # 1. RESULT-*.md 或 RESULT.md（禁止放根目錄）
+  # 2. *.backup* / *.raw / *.tmp（臨時檔案垃圾）
+
+  local dirty=0
+
+  # 檢查 RESULT 檔案
+  for f in "$WORKSPACE"/RESULT*.md "$WORKSPACE"/RESULT-*.md; do
+    [ -f "$f" ] || continue
+    local base=$(basename "$f")
+    local size=$(wc -c < "$f" | tr -d '[:space:]')
+    log_fail "根目錄有 RESULT 檔案: $base ($size bytes) → 應放 knowledge/ 或 projects/"
+    dirty=1
+
+    if [ "$MODE" = "fix" ]; then
+      local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
+      mkdir -p "$trash_dir"
+      mv "$f" "$trash_dir/$base"
+      log_fix "已移到 $trash_dir/$base"
+    fi
+  done
+
+  # 檢查臨時垃圾檔案
+  for f in "$WORKSPACE"/*.backup* "$WORKSPACE"/*.raw "$WORKSPACE"/*.tmp "$WORKSPACE"/*.bak; do
+    [ -f "$f" ] || continue
+    local base=$(basename "$f")
+    local size=$(wc -c < "$f" | tr -d '[:space:]')
+    log_fail "根目錄有垃圾檔案: $base ($size bytes)"
+    dirty=1
+
+    if [ "$MODE" = "fix" ]; then
+      local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
+      mkdir -p "$trash_dir"
+      mv "$f" "$trash_dir/$base"
+      log_fix "已移到 $trash_dir/$base"
+    fi
+  done
+
+  if [ "$dirty" -eq 0 ]; then
+    log_ok "根目錄乾淨，無 RESULT 或垃圾檔案"
+  fi
+}
+
+# ============================================================
+# CR-3: 任務板一致性檢查
+# ============================================================
+check_cr3() {
+  log_head "CR-3: 任務板資料一致性"
+
+  # 檢查 API 是否可用
+  if ! curl -sf "$API_BASE/api/tasks" > /dev/null 2>&1; then
+    log_fail "任務板 API 無回應 ($API_BASE)"
+    return
+  fi
+
+  local tasks_json=$(curl -sf "$API_BASE/api/tasks")
+  local total=$(echo "$tasks_json" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
+print(len(tasks))
+" 2>/dev/null || echo "0")
+
+  log_ok "任務板可連線，共 $total 筆任務"
+
+  # 檢查 stuck running 任務（超過 24 小時還在 running）
+  echo "$tasks_json" | python3 -c "
+import json, sys
+from datetime import datetime, timezone, timedelta
+data = json.load(sys.stdin)
+tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
+now = datetime.now(timezone.utc)
+stuck = 0
+for t in tasks:
+    if t.get('status') == 'running':
+        created = t.get('createdAt', '')
+        if created:
+            try:
+                ct = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                age_h = (now - ct).total_seconds() / 3600
+                if age_h > 24:
+                    print('STUCK: %s (%s) - running %.0f hrs' % (t['id'], t.get('name','?')[:40], age_h))
+                    stuck += 1
+            except:
+                pass
+if stuck == 0:
+    print('OK: no stuck running tasks')
+else:
+    print('TOTAL: %d stuck tasks' % stuck)
+" 2>/dev/null | while IFS= read -r line; do
+    if echo "$line" | grep -q "^STUCK:"; then
+      log_warn "$line"
+      if [ "$MODE" = "fix" ]; then
+        local tid=$(echo "$line" | sed 's/STUCK: \([^ ]*\).*/\1/')
+        curl -sf -X PATCH "$API_BASE/api/tasks/$tid/progress" \
+          -H "Content-Type: application/json" \
+          -d '{"status":"failed","summary":"auto-heal: stuck >24h, marked failed"}' > /dev/null 2>&1 && \
+          log_fix "已將 $tid 標記為 failed" || true
+      fi
+    elif echo "$line" | grep -q "^OK:"; then
+      log_ok "$line"
+    fi
+  done
+}
+
+# ============================================================
+# CR-4: n8n 通知迴路檢查
+# ============================================================
+check_cr4() {
+  log_head "CR-4: n8n 通知迴路"
+
+  # 檢查 n8n 容器
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "n8n"; then
+    log_ok "n8n 容器運行中"
+  else
+    log_fail "n8n 容器未運行"
+    return
+  fi
+
+  # 檢查 workflows active
+  local active_count=$(docker exec n8n-production-postgres-1 \
+    psql -U n8n -d n8n -t -A -c "SELECT COUNT(*) FROM workflow_entity WHERE active=true;" 2>/dev/null || echo "0")
+  active_count=$(echo "$active_count" | tr -d '[:space:]')
+
+  if [ "$active_count" -ge 3 ]; then
+    log_ok "n8n workflows: $active_count 個 active"
+  else
+    log_warn "n8n workflows: 只有 $active_count 個 active（預期 3 個）"
+  fi
+
+  # 檢查 runs 的 runPath
+  if curl -sf "$API_BASE/api/runs" > /dev/null 2>&1; then
+    local run_stats=$(curl -sf "$API_BASE/api/runs" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+runs = data if isinstance(data, list) else data.get('runs', data.get('data', []))
+total = len(runs)
+has_path = sum(1 for r in runs if r.get('runPath') and str(r.get('runPath')) not in ('', 'undefined'))
+print('%d %d' % (total, has_path))
+" 2>/dev/null || echo "0 0")
+
+    local total_runs=$(echo "$run_stats" | cut -d' ' -f1)
+    local with_path=$(echo "$run_stats" | cut -d' ' -f2)
+
+    if [ "$with_path" -eq 0 ] && [ "$total_runs" -gt 0 ]; then
+      log_fail "全部 $total_runs 個 runs 的 runPath 為空 → n8n 通知無法觸發"
+      log_warn "原因：建立任務時未帶 projectPath，或未使用 POST /api/tasks/:id/run"
+    elif [ "$with_path" -lt "$total_runs" ]; then
+      log_warn "$total_runs 個 runs 中只有 $with_path 個有 runPath"
+    else
+      log_ok "全部 $total_runs 個 runs 都有 runPath"
+    fi
+  fi
+
+  # 檢查 /workspace 掛載
+  if docker exec n8n-production-n8n-1 ls /workspace/AGENTS.md > /dev/null 2>&1; then
+    log_ok "/workspace 掛載正常"
+  else
+    log_fail "/workspace 未掛載或內容不可讀"
+  fi
+}
+
+# ============================================================
+# CR-1: 知識庫品質檢查
+# ============================================================
+check_cr1() {
+  log_head "CR-1: 知識庫品質檢查"
+
+  local kb_dir="$WORKSPACE/knowledge"
+  if [ ! -d "$kb_dir" ]; then
+    log_fail "knowledge/ 目錄不存在"
+    return
+  fi
+
+  local total=0
+  local good=0
+  local bad=0
+
+  for dir in "$kb_dir"/*/; do
+    [ -d "$dir" ] || continue
+    local name=$(basename "$dir")
+    total=$((total + 1))
+
+    local readme="$dir/README-v1.1.md"
+    if [ ! -f "$readme" ]; then
+      # 也檢查 README.md
+      readme="$dir/README.md"
+    fi
+
+    if [ ! -f "$readme" ]; then
+      log_warn "$name: 無 README"
+      bad=$((bad + 1))
+      continue
+    fi
+
+    local size=$(wc -c < "$readme" | tr -d '[:space:]')
+    if [ "$size" -lt 5000 ]; then
+      log_fail "$name: $(basename $readme) 只有 $size bytes（需 ≥5000）"
+      bad=$((bad + 1))
+    else
+      log_ok "$name: $(basename $readme) = $size bytes"
+      good=$((good + 1))
+    fi
+  done
+
+  echo ""
+  echo "  總計: $total 個知識庫, ${GREEN}$good 合格${NC}, ${RED}$bad 不合格${NC}"
+}
+
+# ============================================================
+# CR-5: Agent 假報告偵測（檢查 evidenceLinks 指向的檔案）
+# ============================================================
+check_cr5() {
+  log_head "CR-5: evidenceLinks 驗證"
+
+  if ! curl -sf "$API_BASE/api/tasks" > /dev/null 2>&1; then
+    log_fail "API 無回應，跳過"
+    return
+  fi
+
+  curl -sf "$API_BASE/api/tasks" | python3 -c "
+import json, sys, os
+data = json.load(sys.stdin)
+tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
+checked = 0
+broken = 0
+for t in tasks:
+    links = t.get('evidenceLinks', [])
+    status = t.get('status', '')
+    if status in ('done', 'review') and links:
+        for link in links:
+            checked += 1
+            path = link
+            if not os.path.isabs(path):
+                path = os.path.expanduser('~/.openclaw/workspace/' + path)
+            exists = os.path.isfile(path)
+            if exists:
+                size = os.path.getsize(path)
+                if size < 100:
+                    print('EMPTY:%s|%s|%d|%s' % (t['id'], t.get('name','?')[:30], size, link))
+                    broken += 1
+            else:
+                print('MISSING:%s|%s|%s' % (t['id'], t.get('name','?')[:30], link))
+                broken += 1
+print('SUMMARY:%d|%d' % (checked, broken))
+" 2>/dev/null | while IFS= read -r line; do
+    if echo "$line" | grep -q "^MISSING:"; then
+      local info=$(echo "$line" | cut -d: -f2-)
+      log_fail "evidenceLink 檔案不存在: $info"
+    elif echo "$line" | grep -q "^EMPTY:"; then
+      local info=$(echo "$line" | cut -d: -f2-)
+      log_warn "evidenceLink 檔案過小: $info"
+    elif echo "$line" | grep -q "^SUMMARY:"; then
+      local checked=$(echo "$line" | cut -d: -f2 | cut -d'|' -f1)
+      local broken=$(echo "$line" | cut -d: -f2 | cut -d'|' -f2)
+      if [ "$broken" -eq 0 ] && [ "$checked" -gt 0 ]; then
+        log_ok "已驗證 $checked 個 evidenceLinks，全部有效"
+      fi
+    fi
+  done
+}
+
+# ============================================================
+# 基礎健康檢查
+# ============================================================
+check_infra() {
+  log_head "基礎設施健康檢查"
+
+  # API
+  if curl -sf "$API_BASE/api/tasks" > /dev/null 2>&1; then
+    log_ok "OpenClaw API ($API_BASE) 正常"
+  else
+    log_fail "OpenClaw API ($API_BASE) 無回應"
+  fi
+
+  # Docker
+  if command -v docker > /dev/null 2>&1; then
+    local containers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep "n8n-production" | wc -l | tr -d '[:space:]')
+    if [ "$containers" -ge 4 ]; then
+      log_ok "Docker: $containers 個 n8n 容器運行中"
+    elif [ "$containers" -gt 0 ]; then
+      log_warn "Docker: 只有 $containers 個容器（預期 4 個）"
+    else
+      log_fail "Docker: 無 n8n 容器運行"
+    fi
+  else
+    log_warn "Docker 未安裝"
+  fi
+
+  # Git status
+  cd "$WORKSPACE"
+  local dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d '[:space:]')
+  if [ "$dirty" -eq 0 ]; then
+    log_ok "Git: working tree 乾淨"
+  else
+    log_warn "Git: $dirty 個未提交的變更"
+  fi
+
+  # 磁碟空間
+  local disk_pct=$(df -h "$WORKSPACE" | tail -1 | awk '{print $5}' | tr -d '%')
+  if [ "$disk_pct" -lt 80 ]; then
+    log_ok "磁碟使用: ${disk_pct}%"
+  elif [ "$disk_pct" -lt 95 ]; then
+    log_warn "磁碟使用: ${disk_pct}%（>80%）"
+  else
+    log_fail "磁碟使用: ${disk_pct}%（>95% 危險！）"
+  fi
+}
+
+# ============================================================
+# 主流程
+# ============================================================
+echo "${BLUE}╔══════════════════════════════════════════╗${NC}"
+echo "${BLUE}║   OpenClaw Self-Heal v1.0                ║${NC}"
+echo "${BLUE}║   模式: $MODE                              ║${NC}"
+echo "${BLUE}╚══════════════════════════════════════════╝${NC}"
+echo ""
+
+case "$MODE" in
+  cr1) check_cr1 ;;
+  cr2) check_cr2 ;;
+  cr3) check_cr3 ;;
+  cr4) check_cr4 ;;
+  cr5) check_cr5 ;;
+  check|fix)
+    check_infra
+    check_cr2
+    check_cr1
+    check_cr3
+    check_cr4
+    check_cr5
+    ;;
+  *)
+    echo "用法: $0 [check|fix|cr1|cr2|cr3|cr4|cr5]"
+    echo ""
+    echo "  check  - 只檢查不修復（預設）"
+    echo "  fix    - 檢查 + 自動修復綠燈項目"
+    echo "  cr1    - 只跑知識庫品質檢查"
+    echo "  cr2    - 只跑根目錄污染檢查"
+    echo "  cr3    - 只跑任務板一致性"
+    echo "  cr4    - 只跑 n8n 迴路"
+    echo "  cr5    - 只跑 evidenceLinks 驗證"
+    exit 0
+    ;;
+esac
+
+# 總結
+echo ""
+echo "${BLUE}━━━ 總結 ━━━${NC}"
+echo "  ${RED}❌ 問題: $ISSUES${NC}"
+echo "  ${YELLOW}⚠️  警告: $WARNINGS${NC}"
+if [ "$MODE" = "fix" ]; then
+  echo "  ${BLUE}🔧 已修復: $FIXED${NC}"
+fi
+
+if [ "$ISSUES" -gt 0 ]; then
+  echo ""
+  echo "${RED}⚠️  發現問題，請回報老蔡或執行 '$0 fix' 自動修復綠燈項目${NC}"
+  exit 1
+else
+  echo ""
+  echo "${GREEN}✅ 系統健康${NC}"
+  exit 0
+fi
