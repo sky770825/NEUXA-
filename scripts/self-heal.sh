@@ -1,6 +1,6 @@
 #!/bin/zsh
-# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.0
-# 對應 AGENTS.md v1.3 危機處理守則 CR-1~CR-6
+# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.1
+# 對應 AGENTS.md v1.3.1 危機處理守則 CR-1~CR-7
 # 用法：
 #   ./scripts/self-heal.sh              # 全部檢查
 #   ./scripts/self-heal.sh check        # 只檢查不修復
@@ -37,38 +37,58 @@ log_head() { echo "\n${BLUE}━━━ $1 ━━━${NC}"; }
 check_cr2() {
   log_head "CR-2: workspace 根目錄檢查"
 
-  # 檢查項目：
-  # 1. RESULT-*.md 或 RESULT.md（禁止放根目錄）
-  # 2. *.backup* / *.raw / *.tmp（臨時檔案垃圾）
+  # .md 白名單 — 只有這些允許存在於根目錄
+  local MD_WHITELIST="AGENTS.md CHANGELOG.md CLAUDE.md CONTRIBUTING.md MEMORY.md README.md SECURITY.md"
 
   local dirty=0
+  local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
 
-  # 檢查 RESULT 檔案
-  for f in "$WORKSPACE"/RESULT*.md "$WORKSPACE"/RESULT-*.md; do
+  # 1. 檢查非白名單 .md 檔案
+  for f in "$WORKSPACE"/*.md; do
     [ -f "$f" ] || continue
     local base=$(basename "$f")
-    local size=$(wc -c < "$f" | tr -d '[:space:]')
-    log_fail "根目錄有 RESULT 檔案: $base ($size bytes) → 應放 knowledge/ 或 projects/"
-    dirty=1
+    local in_whitelist=0
+    for w in ${=MD_WHITELIST}; do
+      [ "$base" = "$w" ] && in_whitelist=1 && break
+    done
+    if [ "$in_whitelist" -eq 0 ]; then
+      local size=$(wc -c < "$f" | tr -d '[:space:]')
+      log_fail "根目錄有非白名單 .md: $base ($size bytes)"
+      dirty=1
+      if [ "$MODE" = "fix" ]; then
+        mkdir -p "$trash_dir"
+        mv "$f" "$trash_dir/$base"
+        log_fix "已移到 $trash_dir/$base"
+      fi
+    fi
+  done
 
+  # 2. 檢查非系統檔案（json, xml, png, csv 等）
+  for f in "$WORKSPACE"/*.json "$WORKSPACE"/*.xml "$WORKSPACE"/*.png "$WORKSPACE"/*.jpg "$WORKSPACE"/*.csv "$WORKSPACE"/*.sql; do
+    [ -f "$f" ] || continue
+    local base=$(basename "$f")
+    # 跳過 package.json 等標準檔案
+    case "$base" in
+      package.json|package-lock.json|tsconfig.json) continue ;;
+    esac
+    local size=$(wc -c < "$f" | tr -d '[:space:]')
+    log_fail "根目錄有非系統檔案: $base ($size bytes)"
+    dirty=1
     if [ "$MODE" = "fix" ]; then
-      local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
       mkdir -p "$trash_dir"
       mv "$f" "$trash_dir/$base"
       log_fix "已移到 $trash_dir/$base"
     fi
   done
 
-  # 檢查臨時垃圾檔案
+  # 3. 檢查臨時垃圾檔案
   for f in "$WORKSPACE"/*.backup* "$WORKSPACE"/*.raw "$WORKSPACE"/*.tmp "$WORKSPACE"/*.bak; do
     [ -f "$f" ] || continue
     local base=$(basename "$f")
     local size=$(wc -c < "$f" | tr -d '[:space:]')
     log_fail "根目錄有垃圾檔案: $base ($size bytes)"
     dirty=1
-
     if [ "$MODE" = "fix" ]; then
-      local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
       mkdir -p "$trash_dir"
       mv "$f" "$trash_dir/$base"
       log_fix "已移到 $trash_dir/$base"
@@ -76,7 +96,7 @@ check_cr2() {
   done
 
   if [ "$dirty" -eq 0 ]; then
-    log_ok "根目錄乾淨，無 RESULT 或垃圾檔案"
+    log_ok "根目錄乾淨，無非白名單檔案"
   fi
 }
 
@@ -303,6 +323,69 @@ print('SUMMARY:%d|%d' % (checked, broken))
 }
 
 # ============================================================
+# CR-7: 未授權自動化偵測
+# ============================================================
+check_cr7() {
+  log_head "CR-7: 未授權自動化偵測"
+
+  local found=0
+  local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
+
+  # 1. 掃描 .pid 檔案
+  for f in "$WORKSPACE"/.*.pid "$WORKSPACE"/*.pid; do
+    [ -f "$f" ] || continue
+    local base=$(basename "$f")
+    local pid_val=$(cat "$f" 2>/dev/null | tr -d '[:space:]')
+    found=1
+
+    if [ -n "$pid_val" ] && ps -p "$pid_val" > /dev/null 2>&1; then
+      log_fail "未授權 process 在跑! $base (PID: $pid_val) → 🔴 需老蔡批准才能 kill"
+    else
+      log_warn "發現 .pid 檔: $base (PID: $pid_val, 已停止)"
+      if [ "$MODE" = "fix" ]; then
+        mkdir -p "$trash_dir"
+        mv "$f" "$trash_dir/$base"
+        log_fix "已移到 $trash_dir/$base"
+      fi
+    fi
+  done
+
+  # 2. 掃描 executor/daemon/cron 相關檔案
+  for pattern in "*executor*" "*daemon*" "*cron*" "*scheduler*" ".auto-mode-status" "*autoexecutor*"; do
+    for f in "$WORKSPACE"/$pattern "$WORKSPACE"/.$pattern; do
+      [ -e "$f" ] || continue
+      [ -d "$f" ] && [ "$(ls -A "$f" 2>/dev/null)" = "" ] && continue  # 跳過空目錄
+      local base=$(basename "$f")
+      local ftype="file"
+      [ -d "$f" ] && ftype="directory"
+      log_warn "發現未授權自動化 $ftype: $base ($(ls -la "$f" 2>/dev/null | awk '{print $6, $7, $8}'))"
+      found=1
+
+      if [ "$MODE" = "fix" ]; then
+        mkdir -p "$trash_dir"
+        mv "$f" "$trash_dir/$base" 2>/dev/null
+        log_fix "已移到 $trash_dir/$base"
+      fi
+    done
+  done
+
+  # 3. 檢查 logs/ 下的 autoexecutor 日誌
+  if [ -f "$WORKSPACE/logs/autoexecutor.log" ]; then
+    log_warn "發現 autoexecutor 日誌: logs/autoexecutor.log"
+    found=1
+    if [ "$MODE" = "fix" ]; then
+      mkdir -p "$trash_dir"
+      mv "$WORKSPACE/logs/autoexecutor.log" "$trash_dir/autoexecutor.log"
+      log_fix "已移到 $trash_dir/autoexecutor.log"
+    fi
+  fi
+
+  if [ "$found" -eq 0 ]; then
+    log_ok "未發現未授權自動化程式"
+  fi
+}
+
+# ============================================================
 # 基礎健康檢查
 # ============================================================
 check_infra() {
@@ -353,7 +436,7 @@ check_infra() {
 # 主流程
 # ============================================================
 echo "${BLUE}╔══════════════════════════════════════════╗${NC}"
-echo "${BLUE}║   OpenClaw Self-Heal v1.0                ║${NC}"
+echo "${BLUE}║   OpenClaw Self-Heal v1.1                ║${NC}"
 echo "${BLUE}║   模式: $MODE                              ║${NC}"
 echo "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
@@ -364,6 +447,7 @@ case "$MODE" in
   cr3) check_cr3 ;;
   cr4) check_cr4 ;;
   cr5) check_cr5 ;;
+  cr7) check_cr7 ;;
   check|fix)
     check_infra
     check_cr2
@@ -371,6 +455,7 @@ case "$MODE" in
     check_cr3
     check_cr4
     check_cr5
+    check_cr7
     ;;
   *)
     echo "用法: $0 [check|fix|cr1|cr2|cr3|cr4|cr5]"
@@ -382,6 +467,7 @@ case "$MODE" in
     echo "  cr3    - 只跑任務板一致性"
     echo "  cr4    - 只跑 n8n 迴路"
     echo "  cr5    - 只跑 evidenceLinks 驗證"
+    echo "  cr7    - 只跑未授權自動化偵測"
     exit 0
     ;;
 esac

@@ -1,9 +1,9 @@
-# AGENTS.md - 工作指南 v1.3
+# AGENTS.md - 工作指南 v1.3.1
 
-> **版本**: v1.3
+> **版本**: v1.3.1
 > **定版日期**: 2026-02-16
-> **變更摘要**: 新增標準 SOP 流程 + 危機處理守則；修正任務板 API 流程（projectPath + run 端點）
-> **上一版本**: v1.2.1
+> **變更摘要**: 新增 SOP-5 維護巡檢 + CR-7 未授權自動化偵測
+> **上一版本**: v1.3
 > **適用範圍**: 所有 Agent（小蔡、Claude、子 Agent）
 
 ---
@@ -109,6 +109,7 @@ L4 🎨  Cursor
 - ❌ 沒有 RESULT.md 就說做完了
 - ❌ 報告完成數量但無法驗證內容
 - ❌ 在 workspace 根目錄亂丟 RESULT 檔案（見下方檔案規則）
+- ❌ 建立 autoexecutor / daemon / 自動循環腳本（見 CR-7）
 
 ### 檔案位置規則（v1.2.1 新增）
 ```
@@ -360,6 +361,51 @@ CRM 專案  → projects/crm/modules/main/
 7. 不可只看子代理說「完成」就信，必須驗證
 ```
 
+### SOP-5: workspace 維護巡檢（v1.3.1 新增）
+
+```
+觸發：每次 /new 開新對話、老蔡說「幫我看一下」「清一下」
+目的：保持 workspace 乾淨，偵測異常活動
+
+1. 根目錄檔案清點
+   - ls *.md → 比對白名單：
+     ✅ AGENTS.md, CHANGELOG.md, CLAUDE.md, CONTRIBUTING.md,
+        MEMORY.md, README.md, SECURITY.md
+   - 白名單外的 .md → 移到 archive/cleanup-<日期>/
+   - ls *.json *.xml *.png 等非系統檔 → 同樣移走
+
+2. 隱藏檔 / 未授權程式偵測
+   - 檢查 .autoexecutor*、.auto-mode-status、.clawhub、*.pid
+   - 有 .pid 檔 → 讀取 PID，確認 process 是否在跑
+     - 在跑 → ⛔ 停止，回報老蔡（🔴 紅燈）
+     - 沒跑 → 移到 archive
+   - 其他未授權隱藏檔 → 移到 archive
+
+3. 可疑目錄偵測
+   - 根目錄不應出現：~/（實體資料夾）、小菜/、任何非標準目錄
+   - 標準目錄白名單：
+     apps/ archive/ assets/ backups/ checkpoints/ config/
+     control-center/ core/ credentials/ docs/ extensions/
+     git-hooks/ guides/ knowledge/ learning/ logs/ memory/
+     n8n-workflows/ outputs/ packages/ patches/ projects/
+     quarantine/ reports/ repos/ runs/ scripts/ skills/
+     src/ tasks/ test/ ui/ vendor/ workflows/ xiaocai-指令集/
+   - 非白名單目錄 → 回報老蔡，確認後移到 archive
+
+4. 任務板衛生
+   - GET /api/tasks → 統計
+   - running 超過 24h → 跑 self-heal.sh cr3 標記 failed
+   - 任務總數異常暴增（上次 check 後 +100 以上）→ 回報老蔡
+
+5. 最近活動偵測（判斷其他 Agent 是否在動）
+   - find . -maxdepth 2 -mmin -10 → 列出最近 10 分鐘被改的檔案
+   - 有修改 → 列出檔案清單，判斷是否為正常操作
+   - 沒修改 → Agent 已停止活動
+
+6. 跑 self-heal.sh check → 完整系統健檢
+7. 回報清理結果給老蔡
+```
+
 ---
 
 ## 🚑 危機處理守則（v1.3 新增）
@@ -470,6 +516,33 @@ CRM 專案  → projects/crm/modules/main/
    - 連續 2 次假報告 → 該 Agent 降級為只讀（不可寫入）
 ```
 
+### CR-7: 未授權自動化偵測（v1.3.1 新增）
+
+```
+症狀：Agent 私自建立 autoexecutor、daemon、cron、自動循環腳本
+已發生案例：小蔡在 2/14 建了 .autoexecutor.pid + .autoexecutor-status + autoexecutor-queue/，
+            未經老蔡批准就啟動自動執行循環
+
+偵測特徵：
+  - 根目錄或子目錄出現 .pid 檔案
+  - 檔名含 executor、daemon、cron、scheduler、bot、loop
+  - .auto-mode-status 等控制檔
+  - boot.log 出現「主循環啟動」「Autoexecutor 啟動」等字樣
+
+處理步驟：
+1. 掃描偵測特徵（self-heal.sh cr7）
+2. 如果有 .pid 檔 → 讀取 PID，用 ps -p <PID> 確認是否在跑
+3. Process 在跑 → ⛔ 不自行 kill，回報老蔡（🔴 紅燈）
+4. Process 沒跑 → 移除 .pid 和相關檔案到 archive
+5. 回報老蔡，附上：
+   - 發現了什麼
+   - 什麼時候建的（ls -la 看時間）
+   - 是否有在執行
+   - 已經移除了什麼
+6. ⛔ 禁止任何 Agent 建立自動循環/daemon/定時任務
+   （這屬於 🔴 紅燈，必須老蔡明確批准）
+```
+
 ### 自動診斷修復腳本
 
 ```bash
@@ -485,6 +558,7 @@ CRM 專案  → projects/crm/modules/main/
 ./scripts/self-heal.sh cr3    # 任務板一致性
 ./scripts/self-heal.sh cr4    # n8n 通知迴路
 ./scripts/self-heal.sh cr5    # evidenceLinks 驗證
+./scripts/self-heal.sh cr7    # 未授權自動化偵測
 ```
 
 **Agent 使用規則：**
@@ -514,6 +588,20 @@ CRM 專案  → projects/crm/modules/main/
 ---
 
 ## 📋 版本變更日誌
+
+### v1.3.1 (2026-02-16) - 定版
+**變更類型**: 小改 — 新增維護巡檢 SOP + 未授權自動化偵測
+**變更原因**: (1) 小蔡反覆在根目錄建檔，清完又建回來 (2) 小蔡私自建立 autoexecutor 自動循環執行器未經老蔡批准
+
+| 項目 | 變更內容 |
+|------|---------|
+| ➕ 新增 | SOP-5: workspace 維護巡檢（根目錄白名單 + 活動偵測 + 清理流程） |
+| ➕ 新增 | CR-7: 未授權自動化偵測（.pid / executor / daemon 掃描） |
+| ➕ 新增 | self-heal.sh cr7 檢查項目 |
+| 🔧 強化 | self-heal.sh CR-2 加入 .md 白名單比對 |
+| ➕ 新增 | 禁止行為：不可建立 autoexecutor / daemon / 自動循環腳本 |
+
+**驗證狀態**: ✅ 老蔡確認，即日生效
 
 ### v1.3 (2026-02-16) - 定版
 **變更類型**: 中改 — 新增 SOP + 危機處理 + API 流程修正
@@ -609,4 +697,4 @@ CRM 專案  → projects/crm/modules/main/
 
 ---
 
-🤖 小蔡 | Agent 工作指南 v1.3 | 2026-02-16 定版
+🤖 小蔡 | Agent 工作指南 v1.3.1 | 2026-02-16 定版
