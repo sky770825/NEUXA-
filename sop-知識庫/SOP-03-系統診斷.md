@@ -39,7 +39,7 @@ priority: P1
 openclaw gateway health
 
 # 任務板 API
-curl -s http://localhost:3001/api/health
+curl -s http://localhost:3011/api/health
 
 # Docker 容器
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -102,7 +102,7 @@ Ollama: {🟢 X 個模型 / 🔴 未運行}
 | 症狀 | 可能原因 | 診斷命令 | 修復（需批准） |
 |------|---------|---------|-------------|
 | Gateway 沒回應 | 進程掛了 | `openclaw gateway health` | `openclaw gateway restart` 🔴 |
-| API 404 | 任務板沒起 | `curl localhost:3001/api/health` | `cd ~/openclaw任務面版設計 && npm run dev` 🔴 |
+| API 404 | 任務板沒起 | `curl localhost:3011/api/health` | `cd ~/openclaw任務面版設計 && npm run dev` 🔴 |
 | Docker 容器停了 | crash 或 OOM | `docker ps -a` | `docker start {name}` 🔴 |
 | Ollama 沒回應 | 沒啟動 | `curl localhost:11434/api/tags` | `ollama serve &` 🔴 |
 | 小蔡卡住 | session 膨脹 | `./scripts/self-heal.sh cr8` | `openclaw gateway restart` 🔴 |

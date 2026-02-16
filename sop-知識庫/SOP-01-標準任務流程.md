@@ -43,6 +43,12 @@ Body: {
 
 **必帶 projectPath**，沒帶 = API 會拒絕。
 
+| 任務類型 | projectPath |
+|----------|-------------|
+| 知識庫寫入 | projects/openclaw/modules/knowledge/ |
+| 系統維護 | projects/openclaw/modules/maintenance/ |
+| 通用任務 | projects/openclaw/ |
+
 ### Step 2: 建 Run
 
 ```
@@ -94,7 +100,7 @@ Body: { "status": "review" }
 
 | 狀況 | 處理方式 |
 |------|----------|
-| API 建任務失敗 | 檢查 API 是否在跑（curl localhost:3001/api/health），不行就回報老蔡 |
+| API 建任務失敗 | 檢查 API 是否在跑（curl localhost:3011/api/health），不行就回報老蔡 |
 | runPath 目錄不存在 | mkdir -p 建立，不要跳過 |
 | 執行中出錯 | 停止，回報老蔡附上錯誤訊息，不要自己亂修 |
 | RESULT.md 忘了寫 | 補寫，任務不算完成 |

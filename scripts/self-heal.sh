@@ -221,6 +221,41 @@ print('%d %d' % (total, has_path))
 }
 
 # ============================================================
+# CR-6: 服務全掛（P0 緊急）
+# ============================================================
+check_cr6() {
+  log_head "CR-6: 服務全掛（P0 緊急）"
+  local failed=0
+
+  if ! docker ps &>/dev/null; then
+    log_fail "Docker 未運行"
+    failed=$((failed+1))
+  fi
+
+  if ! curl -s -o /dev/null -w '' --max-time 5 http://localhost:3011/health &>/dev/null 2>&1; then
+    log_fail "任務板 API 無回應"
+    failed=$((failed+1))
+  fi
+
+  if ! curl -s -o /dev/null -w '' --max-time 5 http://localhost:5678/healthz &>/dev/null 2>&1; then
+    log_fail "n8n 無回應"
+    failed=$((failed+1))
+  fi
+
+  local usage=$(df -h / | tail -1 | awk '{print $5}' | tr -d '%')
+  if [ "$usage" -ge 90 ] 2>/dev/null; then
+    log_fail "磁碟 ${usage}% — 快滿了"
+    failed=$((failed+1))
+  fi
+
+  if [ $failed -eq 0 ]; then
+    log_ok "CR-6: 核心服務正常"
+  else
+    log_fail "CR-6: ${failed} 個服務異常 — P0 回報老蔡"
+  fi
+}
+
+# ============================================================
 # CR-1: 知識庫品質檢查
 # ============================================================
 check_cr1() {
@@ -506,6 +541,7 @@ case "$MODE" in
   cr3) check_cr3 ;;
   cr4) check_cr4 ;;
   cr5) check_cr5 ;;
+  cr6) check_cr6 ;;
   cr7) check_cr7 ;;
   cr8) check_cr8 ;;
   rollback)
@@ -562,7 +598,7 @@ case "$MODE" in
     check_cr8
     ;;
   *)
-    echo "用法: $0 [check|fix|rollback|cr1|cr2|cr3|cr4|cr5|cr7]"
+    echo "用法: $0 [check|fix|rollback|cr1|cr2|cr3|cr4|cr5|cr6|cr7]"
     echo ""
     echo "  check    - 只檢查不修復（預設）"
     echo "  fix      - 檢查 + 自動修復綠燈項目"
@@ -572,6 +608,7 @@ case "$MODE" in
     echo "  cr3      - 只跑任務板一致性"
     echo "  cr4      - 只跑 n8n 迴路"
     echo "  cr5      - 只跑 evidenceLinks 驗證"
+    echo "  cr6      - 只跑服務全掛檢查（P0 緊急）"
     echo "  cr7      - 只跑未授權自動化偵測"
     echo "  cr8      - 只跑 session 膨脹 + 自幹偵測"
     exit 0

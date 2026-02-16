@@ -70,16 +70,16 @@ sessions_spawn(
 
 ```bash
 # 檔案存在？
-ls -la knowledge/{名稱}/README.md
+ls -la knowledge/{名稱}/README-v1.1.md
 
 # 大小 ≥5KB？
-wc -c knowledge/{名稱}/README.md
+wc -c knowledge/{名稱}/README-v1.1.md
 
 # 有表格？
-grep -c '|' knowledge/{名稱}/README.md
+grep -c '|' knowledge/{名稱}/README-v1.1.md
 
 # 有真實 URL？
-grep -c 'https://' knowledge/{名稱}/README.md
+grep -c 'https://' knowledge/{名稱}/README-v1.1.md
 ```
 
 **全部通過才算完成。任何一項不過 → 退回子代理重做。**
@@ -107,7 +107,7 @@ grep -c 'https://' knowledge/{名稱}/README.md
 ```
 📚 知識庫寫入完成
 名稱：{名稱}
-檔案：knowledge/{名稱}/README.md
+檔案：knowledge/{名稱}/README-v1.1.md
 大小：{X} KB
 表格：{Y} 個
 URL：{Z} 個

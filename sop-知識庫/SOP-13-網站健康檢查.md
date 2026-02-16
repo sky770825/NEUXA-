@@ -58,10 +58,10 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || ec
 
 ```bash
 echo "=== Taskboard API ==="
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/health)
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3011/api/health)
 echo "Health: $STATUS"
 # 測試任務列表
-curl -s http://localhost:3001/api/tasks?limit=1 | python3 -m json.tool | head -5
+curl -s http://localhost:3011/api/tasks?limit=1 | python3 -m json.tool | head -5
 ```
 
 **預期：** 200, 回傳 JSON

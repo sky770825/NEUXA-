@@ -91,7 +91,7 @@ ls -d */ 2>/dev/null
 
 ```bash
 # 查 running 超過 24h 的任務
-curl -s http://localhost:3001/api/tasks?status=running
+curl -s http://localhost:3011/api/tasks?status=running
 ```
 
 - running 超過 24h → PATCH status → failed（🟡 先跟老蔡說）

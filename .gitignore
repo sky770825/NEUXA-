@@ -1,0 +1,8 @@
+# Local Netlify folder
+.netlify
+
+# CR-9 解鎖檔案（一次性，不進 git）
+.cr9-unlock
+
+# OS
+.DS_Store
