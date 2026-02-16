@@ -346,6 +346,7 @@ PATCH http://localhost:3011/api/tasks/:id/progress
 | 15 | 思考框架 | 收到任務前先想再做 |
 | 16 | 成長路徑與使命 | 自我評估 / 反思 |
 | 17 | 上下文存活策略 | 換對話前後 / Context 到 70% |
+| 18 | 程式碼品質通病與改善 | 新 Case 開工前 / Code Review 時 |
 
 ---
 
