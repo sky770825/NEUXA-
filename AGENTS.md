@@ -193,6 +193,38 @@ curl -s http://localhost:11434/api/generate \
 - 超時未回覆 → 記錄待辦 → 繼續做其他事
 - 絕對不要停在那裡等，永遠有備案
 
+### 🚨 紅色警戒 — 緊急升級
+
+遇到以下嚴重問題時，立即觸發紅色警戒：
+- API rate limit 連續失敗（429）
+- 服務無回應（gateway/任務板/n8n）
+- 安全問題（token 洩漏、未授權存取）
+- 資料損毀風險
+
+**觸發方式：**
+```bash
+curl -X POST http://localhost:3011/api/openclaw/red-alert \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "taskId": "當前任務ID",
+    "title": "問題標題",
+    "description": "詳細描述：發生什麼、試過什麼、建議解法",
+    "severity": "high 或 critical",
+    "category": "rate_limit | service_down | security | auth_failed | other"
+  }'
+```
+
+**系統自動處理：**
+1. 建立警報到審核區（openclaw_reviews）
+2. 任務狀態改為 blocked（自動暫停）
+3. Telegram 通知老蔡（帶 [✅ 已修復] 按鈕）
+4. 老蔡點按鈕 → 任務自動解鎖 → 你繼續執行
+
+**原則：**
+- 懷疑時寧可觸發，不要硬闖
+- 觸發後立即停止，不要「先試試看」
+- 描述要清楚：問題 + 已嘗試 + 建議
+
 ---
 
 ## 紅線
