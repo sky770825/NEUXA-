@@ -331,10 +331,17 @@ check_cr7() {
   local found=0
   local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
 
-  # 1. 掃描 .pid 檔案
+  # 1. 掃描 .pid 檔案（排除老蔡授權的）
+  local PID_WHITELIST=".telegram-panel.pid"
   for f in "$WORKSPACE"/.*.pid "$WORKSPACE"/*.pid; do
     [ -f "$f" ] || continue
     local base=$(basename "$f")
+    # 跳過白名單
+    local pid_ok=0
+    for pw in ${=PID_WHITELIST}; do
+      [ "$base" = "$pw" ] && pid_ok=1 && break
+    done
+    [ "$pid_ok" -eq 1 ] && continue
     local pid_val=$(cat "$f" 2>/dev/null | tr -d '[:space:]')
     found=1
 

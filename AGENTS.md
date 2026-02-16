@@ -1,9 +1,9 @@
-# AGENTS.md - 工作指南 v1.3.1
+# AGENTS.md - 工作指南 v1.3.2
 
-> **版本**: v1.3.1
+> **版本**: v1.3.2
 > **定版日期**: 2026-02-16
-> **變更摘要**: 新增 SOP-5 維護巡檢 + CR-7 未授權自動化偵測
-> **上一版本**: v1.3
+> **變更摘要**: 新增任務必填 10 欄位規範 + Telegram 救援面板
+> **上一版本**: v1.3.1
 > **適用範圍**: 所有 Agent（小蔡、Claude、子 Agent）
 
 ---
@@ -154,6 +154,45 @@ curl -X PATCH http://localhost:3011/api/tasks/:id/progress \
   -d '{"status":"review","summary":"做了什麼"}'
 # → n8n 每分鐘自動偵測新 success run → 讀 RESULT.md → 發 Telegram
 ```
+
+### 新任務必填 10 欄位（v1.3.2 新增）
+
+> 任務板驗證邏輯（`taskCompliance.ts`）會檢查以下欄位，缺少任何一項將被降級為 `draft` + 標記 `noncompliant`。
+
+| # | 欄位 | 型別 | 說明 | 預設值建議 |
+|---|------|------|------|-----------|
+| 1 | `projectPath` | string | 專案路徑 | `projects/openclaw/modules/` |
+| 2 | `agent.type` | string | 執行 Agent 類型 | `kimi` / `claude` / `gemini` / `cursor` |
+| 3 | `riskLevel` | string | 風險等級 | `low` / `medium` / `high` |
+| 4 | `rollbackPlan` | string | 回滾方案 | `git checkout HEAD~1` |
+| 5 | `acceptanceCriteria` | string | 驗收標準 | 明確描述何為「完成」 |
+| 6 | `deliverables` | string[] | 交付物清單 | `["RESULT.md"]` |
+| 7 | `runCommands` | string[] | 執行指令 | `["npm test"]` 或空陣列 |
+| 8 | `modelPolicy` | string | 模型策略 | `cost-first` / `quality-first` |
+| 9 | `executionProvider` | string | 執行平台 | `local` / `cloud` |
+| 10 | `allowPaid` | boolean | 是否允許付費模型 | `false` |
+
+**建立任務完整範例：**
+```bash
+curl -X POST http://localhost:3011/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "任務名稱",
+    "status": "ready",
+    "projectPath": "projects/openclaw/modules/knowledge/",
+    "agent": { "type": "kimi" },
+    "riskLevel": "low",
+    "rollbackPlan": "git checkout HEAD~1",
+    "acceptanceCriteria": "RESULT.md ≥5KB 且通過老蔡驗收",
+    "deliverables": ["RESULT.md"],
+    "runCommands": [],
+    "modelPolicy": "cost-first",
+    "executionProvider": "local",
+    "allowPaid": false
+  }'
+```
+
+⚠️ **舊任務修復**：缺少欄位的舊任務可用 `scripts/fix-noncompliant-tasks.sh` 批次補預設值。
 
 ### projectPath 對照表
 ```
@@ -589,6 +628,18 @@ CRM 專案  → projects/crm/modules/main/
 
 ## 📋 版本變更日誌
 
+### v1.3.2 (2026-02-16) - 定版
+**變更類型**: 小改 — 新增任務必填欄位規範 + Telegram 救援面板資訊
+**變更原因**: (1) taskCompliance.ts 驗證 10 個必填欄位，舊任務因缺少欄位被降級 draft (2) 建立 Telegram 救援面板（@savetsai666bot）供老蔡遠端控制
+
+| 項目 | 變更內容 |
+|------|---------|
+| ➕ 新增 | 新任務必填 10 欄位表格（projectPath ~ allowPaid） |
+| ➕ 新增 | 建立任務完整 API 範例（含全部 10 欄位） |
+| ➕ 新增 | 舊任務修復腳本說明（fix-noncompliant-tasks.sh） |
+
+**驗證狀態**: ✅ 老蔡確認，即日生效
+
 ### v1.3.1 (2026-02-16) - 定版
 **變更類型**: 小改 — 新增維護巡檢 SOP + 未授權自動化偵測
 **變更原因**: (1) 小蔡反覆在根目錄建檔，清完又建回來 (2) 小蔡私自建立 autoexecutor 自動循環執行器未經老蔡批准
@@ -697,4 +748,4 @@ CRM 專案  → projects/crm/modules/main/
 
 ---
 
-🤖 小蔡 | Agent 工作指南 v1.3.1 | 2026-02-16 定版
+🤖 小蔡 | Agent 工作指南 v1.3.2 | 2026-02-16 定版
