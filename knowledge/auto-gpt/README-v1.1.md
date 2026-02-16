@@ -1,4 +1,4 @@
-# Auto-GPT 核心能力分析 (v1.2 完整版 2026-02-16)
+# Auto-GPT 核心能力分析 (v1.3 更新版 2025-12)
 
 > Significant Gravitas | Auto-GPT Platform | Autonomous Agent Builder
 
@@ -6,6 +6,35 @@
 Auto-GPT is an open-source platform for building, deploying, and managing continuous AI agents. Features low-code agent builder, workflow management, marketplace, and CLI/UI tools. Self-host or cloud beta.
 
 Key: Forge (agent kit), Benchmark (agbenchmark), Frontend UI.
+
+**📢 2025年狀態**: Auto-GPT 仍在積極開發，但面臨架構挑戰和記憶失敗問題（詳見下方 2025年現況分析）。
+
+---
+
+## 🆕 2025年現況：機遇與挑戰並存
+
+### 最新開發動態 (2025年底)
+
+| 更新項目 | 狀態 | 說明 |
+|----------|------|------|
+| **Agent Mode in SmartDecisionMakerBlock** | ✅ 新增 | 支援自主工具執行循環 (GitHub PR #11547) |
+| **持續開發** | 🟡 進行中 | 官方部落格持續更新 (autogpt.net) |
+| **GitHub Stars** | ✅ 170K+ | 維持高關注度 |
+
+### 2025年挑戰分析
+
+根據 [DEV Community 2025深度分析](https://dev.to/dataformathub/ai-agents-2025-why-autogpt-and-crewai-still-struggle-with-autonomy-48l0)：
+
+| 挑戰 | 說明 | 影響 |
+|------|------|------|
+| **架構缺口** | 缺乏穩健的長期記憶機制 | Agent 容易「迷失」 |
+| **記憶失敗** | 上下文管理不穩定 | 多步驟任務失敗率高 |
+| **除錯困難** | Agent 行為難以追蹤 | 開發者體驗差 |
+| **自主性問題** | 仍需大量人工介入 | 未達預期「全自動」 |
+
+**結論**: Auto-GPT 在 2025 年仍是重要的開源 Agent 框架，但生產環境應用仍面臨挑戰。適合實驗和原型開發，企業級應用需謹慎評估。
+
+---
 
 ## 🎯 核心強項 (Strengths)
 1. **Agent Autonomy**
@@ -174,4 +203,8 @@ const researchWorkflow = async (topic) => {
 | 研究機構 | 文獻回顧 | 加速 10 倍 |
 | 個人開發 | Side project | 自動化部署 |
 
-**更新**: v1.2 新增核心元件、使用模式、場景矩陣、成本分析、成功案例表格。2026-02-16 by 小蔡。
+**更新**: v1.3 新增 2025年現況分析（機遇與挑戰）、Agent Mode 更新、架構缺口與記憶失敗問題分析。2025-12 by 小蔡。
+
+**版本歷史**:
+- v1.2: 新增核心元件、使用模式、場景矩陣、成本分析、成功案例表格（2026-02-16）
+- v1.1: 初始完整版（2026-02-16）

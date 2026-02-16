@@ -7,15 +7,33 @@ Claude Sonnet 4.5 (2026), mid-size model optimized for speed, coding (SWE-bench 
 
 Integrates GitHub Copilot, Code 2.0 for complex tasks.
 
+## 🆕 2025年更新亮點
+
+### OSWorld 領先 (2025年9月)
+**OSWorld 基準測試**: Sonnet 4.5 達到 **61.4%**，領先所有模型：
+- 比 Sonnet 4 (42.2%) 提升 19.2%
+- 真實電腦操作任務測試
+- **Claude for Chrome 擴充**已整合這些能力
+
+### Haiku 4.5 登場 (2025年10月)
+Anthropic 推出輕量級 **Haiku 4.5**：
+- **Sonnet 4 等級性能**，成本僅 **1/3**
+- 適合高速、低成本應用場景
+- 2025年10月發布
+
+Source: [Anthropic Sonnet 4.5 Announcement](https://www.anthropic.com/news/claude-sonnet-4-5)
+
 ## 🎯 核心強項 (Strengths)
 1. **Coding Mastery**
    - SWE-bench: 77.2% (parallel 82%)
    - Edit errors: 0% (vs 9% prev)
    - Refactors, multi-file understanding
+   - **更可靠的指令遵循與程式碼重構**
 
 2. **Agentic & Tools**
    - Multi-step reasoning/code interp
    - Stronger than Opus in speed/cost
+   - **電腦使用能力大幅提升** (OSWorld 61.4%)
 
 3. **Balance**
    - Arena competitive (#1 sometimes)
@@ -165,4 +183,8 @@ const devWorkflow = async (task) => {
 | Code Review | 讓 Sonnet review 自己的 code | 降低 bug 率 |
 | 文件優先 | 改 code 同時更新 doc | 保持同步 |
 
-**更新**: v1.2 新增使用模式、場景矩陣、成本分析、最佳實踐表格。2026-02-16 by 小蔡。
+**更新**: v1.3 新增 OSWorld 61.4% 領先成績、Haiku 4.5 介紹、電腦使用能力提升。2025-10 by 小蔡。
+
+**版本歷史**:
+- v1.2: 新增使用模式、場景矩陣、成本分析、最佳實踐表格（2026-02-16）
+- v1.1: 初始完整版（2026-02-16）

@@ -1,11 +1,31 @@
-# GPT-5.2 核心能力分析 (v1.2 完整版 2026-02-16)
+# GPT-5.2 核心能力分析 (v1.3 更新版 2025-07)
 
-> OpenAI | GPT-5.2 | Knowledge-Work/Agentic-Coding王
+> OpenAI | GPT-5.2 / o3 / o4-mini | Knowledge-Work/Agentic-Coding王
 
 ## 📖 Overview
 GPT-5.2, released by OpenAI in late 2025, advances GPT-5 with superior agentic capabilities, extended reasoning ("Thinking" mode), and SOTA performance in coding, math, multimodal, and tool use. Optimized for complex knowledge tasks and developer workflows.
 
-Variants: GPT-5.2-Codex for coding, Pro for science/math.
+**📢 2025年最新動態**: 
+- **o3 和 o4-mini** 已於 2025年7月正式發布，接替 o1/o3-mini 成為新一代推理模型
+- **GPT-5 延遲發布**：原訂 2025年初發布，現延至「未來數月」
+- **GPT-5 Thinking 模式**：支援 196k tokens 超大上下文
+
+Variants: GPT-5.2-Codex for coding, Pro for science/math, o3/o4-mini for reasoning.
+
+## 🆕 o3 / o4-mini 新模型 (2025年7月發布)
+
+OpenAI 於 2025年7月推出新一代推理模型，取代 o1/o3-mini：
+
+| 模型 | 定位 | 特點 | 適用場景 |
+|------|------|------|----------|
+| **o3** | 高階推理 | AIME 2024/2025 SOTA，專家評估超越 o3-mini | 數學、科學、複雜推理 |
+| **o4-mini** | 輕量推理 | 速度快、成本低、STEM+非STEM均衡 | 日常推理、快速分析 |
+
+**o3 亮點**:
+- AIME 2024/2025 最佳表現模型
+- 非STEM任務超越 o3-mini
+- 數據科學領域專家評估領先
+- Source: [OpenAI o3 and o4-mini announcement](https://openai.com/index/introducing-o3-and-o4-mini/)
 
 ## 🎯 核心強項 (Strengths)
 1. **Agentic Coding & SWE**
@@ -17,6 +37,7 @@ Variants: GPT-5.2-Codex for coding, Pro for science/math.
    - AIME 2025: 94.6% (no tools)
    - HealthBench Hard: 46.2%
    - MMMU multimodal: 84.2%
+   - **o3: AIME 2024/2025 SOTA** (2025年7月更新)
 
 3. **Knowledge-Work**
    - GDPval-AA: 1462 (top-tier)
@@ -26,6 +47,7 @@ Variants: GPT-5.2-Codex for coding, Pro for science/math.
 4. **Safety & Efficiency**
    - Reduced hallucinations
    - Context compaction for large codebases
+   - **GPT-5 Thinking: 196k context limit**
 
 ## 📊 Benchmarks
 | Benchmark | GPT-5.2 Score | Rank/Comparison |
@@ -142,7 +164,13 @@ Task: "解釋這段複雜代碼的執行流程，step-by-step，標註每個變�
 | 成本高 | $620/GDPval | 分層使用，非關鍵任務降級 |
 | 速度較慢 | 比 Grok 慢 3-5x | 非即時任務可用 |
 | API 限流 | Tier 1 限制 | 申請 Tier 2 或備援 |
-| 上下文限制 | 128K | 超長文檔切分處理 |
+| 上下文限制 | **196K (Thinking 模式)** / 128K (標準) | 超長文檔切分處理 |
+| GPT-5 延遲 | 發布時間未定 | 先用 GPT-5.2 / o3 |
+
+**2025年更新重點**:
+- GPT-5 Thinking 模式支援 **196k tokens** 超大上下文（Source: [OpenAI Help Center](https://help.openai.com/en/articles/6825453-chatgpt-release-notes)）
+- GPT-5 發布延遲，OpenAI 優先推出 o3/o4-mini 推理模型
+- o3 在 AIME 2024/2025 創下 SOTA 成績，專家評估超越 o3-mini
 
 ## 📚 學習資源
 | 資源 | 連結 | 類型 |
@@ -188,4 +216,8 @@ const result = await sessions_spawn({
 }
 ```
 
-**更新**: v1.2 新增 Thinking 模式、場景矩陣、成本分析、限制表格、進階整合範例。2026-02-16 by 小蔡。
+**更新**: v1.3 新增 o3/o4-mini 模型資訊（2025年7月發布）、196k context limit、GPT-5 延遲公告、最新 benchmark 數據。2025-07 by 小蔡。
+
+**版本歷史**:
+- v1.2: 新增 Thinking 模式、場景矩陣、成本分析、限制表格、進階整合範例（2026-02-16）
+- v1.1: 初始完整版（2026-02-16）

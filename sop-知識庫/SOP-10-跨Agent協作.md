@@ -37,7 +37,7 @@ priority: P1
 
 ```bash
 # 查相關任務有沒有別人在做
-curl -s http://localhost:3001/api/tasks?status=running
+curl -s http://localhost:3011/api/tasks?status=running
 ```
 
 - 有人在做相同的事 → **停止，回報老蔡**

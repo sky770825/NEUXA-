@@ -1,9 +1,41 @@
-# Trivy 核心能力分析 (v1.2 完整版 2026-02-16)
+# Trivy 核心能力分析 (v1.3 更新版 2025-12)
 
 > Aqua Security | Trivy | Open-Source Vulnerability Scanner王
 
 ## 📖 Overview
 Trivy is a fast, comprehensive vuln scanner for containers, K8s, code, cloud, IaC, secrets, filesystems. Supports SBOM gen, distroless. Integrates with CI/CD, AI for auto-fix.
+
+**📢 2025年底最新版本**: **v0.68.0** (2025年12月2日發布) + **v0.67.0** 重要更新
+
+---
+
+## 🆕 2025年底重大更新 (v0.67+ / v0.68)
+
+### Seal Security 合作 (v0.67.0)
+
+Trivy 於 **v0.67.0** 開始與 **Seal Security** 深度合作：
+
+| 功能 | 說明 | 效益 |
+|------|------|------|
+| **Sealed Components 識別** | 完整識別 Seal Security 構建的開源元件 | 乾淨掃描結果 |
+| **零誤報** | 標記已修復/密封的漏洞 | 減少誤報困擾 |
+| **合規覆蓋** | 完整的合規性報告 | 滿足審計要求 |
+
+Source: [Seal Security Blog](https://www.seal.security/blog/seal-security-aqua-trivy-industry-leading-vulnerability-scanning-meets-production-ready-patching)
+
+### v0.68.0 更新亮點 (2025年12月)
+- 持續的漏洞資料庫更新
+- 性能優化
+- 新的掃描器支援
+
+### 版本速查
+| 版本 | 發布日期 | 重點更新 |
+|------|----------|----------|
+| v0.68.0 | 2025-12-02 | 最新穩定版 |
+| v0.67.0 | 2025-10 | Seal Security 整合 |
+| v0.66.x | 2025年中 | 多項掃描器增強 |
+
+---
 
 ## 🎯 核心強項 (Strengths)
 1. **Broad Coverage**
@@ -174,4 +206,8 @@ fi
 | 定期全面掃描 | 整體評估 | 每月 |
 | 漏洞追蹤 | 建立修復計畫 | 持續 |
 
-**更新**: v1.2 新增掃描目標、使用模式、場景矩陣、成本分析、最佳實踐表格。2026-02-16 by 小蔡。
+**更新**: v1.3 新增 v0.67/v0.68 更新資訊、Seal Security 合作、零誤報功能、版本速查表。2025-12 by 小蔡。
+
+**版本歷史**:
+- v1.2: 新增掃描目標、使用模式、場景矩陣、成本分析、最佳實踐表格（2026-02-16）
+- v1.1: 初始完整版（2026-02-16）

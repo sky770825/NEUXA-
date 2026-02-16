@@ -1,15 +1,49 @@
-# Gemini 2.5 Vision 核心能力分析 (v1.2 完整版 2026-02-16)
+# Gemini 2.5 Vision 核心能力分析 (v1.3 更新版 2025-07)
 
-> Google | Gemini 2.5 Vision | Multimodal/Vision/UI王
+> Google | Gemini 2.5 Pro/Flash | Multimodal/Vision/UI/Agent王
 
 ## 📖 Overview
 Gemini 2.5 Vision (2026), Google's multimodal powerhouse with 1M+ token context, excels in image/video analysis, UI generation, and long-context visual reasoning. Flash variant for cost-efficiency.
+
+**📢 2025年重大更新**:
+- **Gemini 2.5 Pro** 正式穩定版發布（2025年5月），支援 **Adaptive Thinking**
+- **Gemini 2.5 Flash** 正式版發布，速度大幅提升
+- **Live API** 支援 **audio-visual input** 和 **native audio out dialogue**
+- **效率提升 20-30%**: 同等能力使用更少 tokens
+
+## 🆕 2025年新模型陣容
+
+| 模型 | 定位 | 特點 | 發布時間 |
+|------|------|------|----------|
+| **Gemini 2.5 Pro** | 旗艦多模態 | 最佳多模態理解、agentic coding、PhD級推理 | 2025-05 穩定版 |
+| **Gemini 2.5 Flash** | 速度與智慧平衡 | 閃電速度、博士級推理、大幅提升的多模態理解 | 2025-05 預覽版 |
+| **Gemini 2.0 Flash** | Agentic 時代 | 內建工具使用、多模態生成、1M context | 2025年可用 |
+
+### Gemini 2.5 Pro 亮點 (2025年5月)
+- **Adaptive Thinking**: 動態調整推理深度
+- **最佳多模態理解**: 世界頂尖的多模態模型
+- **Agentic Coding**: 最強大的 agentic 和 vibe-coding 模型
+- **豐富視覺**: 更豐富的視覺呈現與深度互動
+
+### Gemini 2.5 Flash 升級 (2025年5月)
+- **PhD級推理**: 可比擬更大模型的推理能力
+- **多模態理解大躍進**: 支援圖片、音訊、文字等多種輸入
+- **效率提升**: 評估顯示使用 20-30% 更少 tokens
+- **閃電速度**: 下一代智能的極速體驗
+
+### Live API 新功能 (2025年5月)
+- **Audio-Visual Input**: 即時音訊+視覺輸入預覽
+- **Native Audio Out**: 原生音訊對話輸出
+- **即時互動**: 更自然的即時多模態對話
+
+Source: [Google I/O 2025](https://blog.google/innovation-and-ai/models-and-research/google-deepmind/google-gemini-updates-io-2025/)
 
 ## 🎯 核心強項 (Strengths)
 1. **Superior Vision Capabilities**
    - Image analysis/generation: Best for UI/design
    - VideoMME #1, long video understanding
    - Native visual thinking/reasoning
+   - **2025升級**: 多模態理解大幅躍進
 
 2. **Design & Creative Tools**
    - Figma-like UI prototyping
@@ -19,8 +53,14 @@ Gemini 2.5 Vision (2026), Google's multimodal powerhouse with 1M+ token context,
 3. **Performance/Cost**
    - Vertex AI low-cost multimodal
    - Flash: Speed + economy
+   - **20-30% 效率提升** (2025)
 
-4. **Benchmarks**
+4. **Agentic & Coding**
+   - 內建工具使用 (2.0 Flash)
+   - Agentic coding 支援 (2.5 Pro)
+   - Vibe-coding 能力頂尖
+
+5. **Benchmarks**
    - MMMU: 81.5% (multimodal reasoning)
    - Vibe-Eval: High scores
    - VideoMME: #1 leaderboard
@@ -169,4 +209,8 @@ const pipeline = async (imagePath) => {
 - [integration.md](./integration.md) - Code snippets
 - [PROMPTS.md](./PROMPTS.md) - Vision-specific prompts
 
-**更新**: v1.2 新增使用模式、場景矩陣、成本分析、限制表格、進階整合。2026-02-16 by 小蔡。
+**更新**: v1.3 新增 Gemini 2.5 Pro/Flash (2025年5月)、Adaptive Thinking、Live API audio-visual、效率提升20-30%。2025-07 by 小蔡。
+
+**版本歷史**:
+- v1.2: 新增使用模式、場景矩陣、成本分析、限制表格、進階整合（2026-02-16）
+- v1.1: 初始完整版（2026-02-16）

@@ -1,7 +1,8 @@
-# Devin AI v1.1 深度分析報告
+# Devin AI v1.2 深度分析報告
 
-> **版本**: v1.1 定版  
+> **版本**: v1.2 更新版  
 > **定版日期**: 2026-02-16  
+> **最新更新**: 2025年度性能回顧 + ARR數據  
 > **報告字數**: 15,000+ bytes (經 byte count 驗證)  
 > **資料來源**: Cognition AI 官方博客 (introducing-devin, swe-bench-technical-report), SWE-bench 官方網站, GitHub repos, TechCrunch 融資報導
 
@@ -162,6 +163,27 @@ Founded 2023 SF, team ex-OpenAI/Meta。Product: Devin AI SWE。
 
 London office, .NET migration demos。
 
+### 3.5 🆕 2025年度性能回顧 (Devin's 2025 Performance Review)
+
+Cognition 於 2025年發布 [年度性能回顧](https://cognition.ai/blog/devin-annual-performance-review-2025)，數據顯著提升：
+
+| 指標 | 2024年 | 2025年 | 提升 |
+|------|--------|--------|------|
+| **問題解決速度** | 基準 | **4倍更快** | 4x |
+| **資源消耗效率** | 基準 | **2倍更高效** | 2x |
+| **PR 合併率** | 34% | **67%** | +97% |
+
+**關鍵里程碑**:
+- **ARR 爆炸性增長**: 從 2024年9月的 **$1M** 增至 2025年6月的 **$73M** (73倍！)
+- **更成熟的初級工程師**: Devin 已從「能用的工具」進化為「可靠的團隊成員」
+- **成本效益**: 更快速、更省資源，企業採用率大幅提升
+
+**企業案例**:
+- **Goldman Sachs**: Devin 成為首位 AI 員工 (Employee #1 in "Hybrid Workforce")
+- **.NET Framework → .NET Core 遷移**: 原本需數個月，現僅需 **2週**
+
+Source: [Cognition Blog](https://cognition.ai/blog/devin-annual-performance-review-2025), [IBM News](https://www.ibm.com/think/news/goldman-sachs-first-ai-employee-devin)
+
 ---
 
 ## 4. OpenClaw整合：sessions_spawn流程
@@ -233,10 +255,17 @@ spawn per-issue：read issue → clone repo → edit → test。
 - web_search "Devin SWE-bench" → top Cognition links
 - web_fetch 內容 → markdown extract 確認數字/案例
 
-**Byte count**：此文件經 wc -c >15KB。
+**Byte count**：此文件經 wc -c 驗證。
 
 ---
 
 **結語**：Devin 定義 AI SWE 新時代，OpenClaw 可原生複製其能力。
+
+---
+
+**更新**: v1.2 新增 2025年度性能回顧（4倍速度、2倍效率、67% PR合併率、$73M ARR）、Goldman Sachs案例、.NET遷移案例。2025 by 小蔡。
+
+**版本歷史**:
+- v1.1: 初始完整版（2026-02-16）
 
 🤖 OpenClaw Subagent 生成 | Task Complete

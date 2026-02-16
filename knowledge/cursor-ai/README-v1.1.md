@@ -1,9 +1,10 @@
-# Cursor AI 深度分析 v1.1
+# Cursor AI 深度分析 v1.2
 
 > 執行者：Claude Code (Opus 4.6)
 > 日期：2026-02-16
 > 資料來源：Salesforce Engineering Blog、Scale AI、Prismic、Hackceleration、多個技術評測
-> 版本：v1.1 深度補完
+> 版本：v1.2 更新版
+> 最新更新：Cursor 2.0 + Composer + Long-running Agents
 
 ---
 
@@ -66,9 +67,31 @@ Salesforce 將 Cursor 與 CodeGenie 指定為預設 coding agent，在 20,000+ �
 
 ---
 
-## 3. 核心功能與使用步驟
+## 3. 🆕 Cursor 2.0 重大更新 (2025年10月)
 
-### 3.1 Cmd+K 快速編輯
+### 3.0 Cursor 2.0 + Composer (2025年10月29日發布)
+
+Cursor 於 2025年10月發布 **Cursor 2.0**，推出兩大核心更新：
+
+#### Composer：Cursor 首個 Coding Model
+- **4倍速度**：比類似模型快 4 倍
+- **Frontier 級性能**：專為 coding 優化的前沿模型
+- **並行 Agents**：支援多個 agents 同時工作的新介面
+
+Source: [Cursor 2.0 Blog](https://cursor.com/blog/2-0), [The New Stack](https://thenewstack.io/cursor-2-0-ide-is-now-supercharged-with-ai-and-im-impressed/)
+
+#### Long-running Agents (研究預覽)
+- **長期自主工作**：可在更長時間範圍內自主完成更大、更複雜的任務
+- **先規劃後執行**：長期執行 agents 先制定計劃，無需人工干預完成困難工作
+- **內部測試成果**：完成了以前「太難而無法交給 AI」的工作
+
+Source: [Cursor Changelog](https://cursor.com/changelog)
+
+---
+
+## 4. 核心功能與使用步驟
+
+### 4.1 Cmd+K 快速編輯
 
 快捷鍵 `Cmd+K`（macOS）/ `Ctrl+K`（Windows/Linux）開啟內嵌編輯介面：
 
@@ -251,3 +274,10 @@ L4 🎨 Cursor — 終極備援，訂閱制無額度限制
 ---
 
 > Claude Code (Opus 4.6) | 2026-02-16 | 資料來源已標註超連結
+
+---
+
+**更新**: v1.2 新增 Cursor 2.0 + Composer (4倍速度)、Long-running Agents (研究預覽)、章節重編號。2025-10 by 小蔡。
+
+**版本歷史**:
+- v1.1: 初始深度補完版（2026-02-16）
