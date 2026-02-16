@@ -1,8 +1,8 @@
-# AGENTS.md - 工作指南 v1.4
+# AGENTS.md - 工作指南 v1.4.1
 
-> **版本**: v1.4
+> **版本**: v1.4.1
 > **定版日期**: 2026-02-16
-> **變更摘要**: 中改 — 新增 SOP-6~10 + 清理危險腳本 + 強化安全規範
+> **變更摘要**: 自幹防呆規則 + CR-8 Session 膨脹偵測 + auto-checkpoint v2.0
 > **上一版本**: v1.3.2
 > **適用範圍**: 所有 Agent（小蔡、Claude、子 Agent）
 
@@ -66,6 +66,29 @@
 - **長任務結果** → 寫入外部檔案
 - **Context 70%** → `./scripts/checkpoint.sh` + 建議 `/new`
 
+### ⛔ 自幹防呆規則（v1.4.1 新增）
+
+> **你是指揮官，不是工兵。違反以下規則 = 卡死 + 浪費 context。**
+
+```
+強制子派條件（任一符合就必須 sessions_spawn，不可自己做）：
+1. 需要 web_search 超過 2 次的任務
+2. 需要編輯超過 3 個檔案的任務
+3. 批量操作（知識庫批量更新、多檔案重構）
+4. 單次任務預估超過 10 步工具呼叫
+
+自幹白名單（只有這些可以自己做）：
+- 讀檔 / ls / wc -c（驗證用）
+- 建任務 / 建 Run（任務板操作）
+- 單一檔案的小修改（<20 行）
+- 回報進度 / 回覆老蔡問題
+
+違反後果：
+- context 爆掉 → session 卡死 → 老蔡要手動重啟 Gateway
+- 記錄違規到 MEMORY.md
+- 連續 2 次違反 → 降級為唯讀模式
+```
+
 ### 四層 Agent 備援架構（引用 MODEL-ROUTING v2.2）
 
 ```
@@ -110,6 +133,9 @@ L4 🎨  Cursor
 - ❌ 報告完成數量但無法驗證內容
 - ❌ 在 workspace 根目錄亂丟 RESULT 檔案（見下方檔案規則）
 - ❌ 建立 autoexecutor / daemon / 自動循環腳本（見 CR-7）
+- ❌ **主會話自己做批量任務**（知識庫更新、多檔案編輯 → 必須 sessions_spawn）
+- ❌ **主會話連續 web_search 超過 2 次**（搜完就該派子代理去寫）
+- ❌ **主會話連續工具呼叫超過 10 次不回報**（卡死前兆，立即停下回報老蔡）
 
 ### 檔案位置規則（v1.2.1 新增）
 ```
@@ -732,6 +758,31 @@ CRM 專案  → projects/crm/modules/main/
    （這屬於 🔴 紅燈，必須老蔡明確批准）
 ```
 
+### CR-8: Session 膨脹 / 自幹偵測（v1.4.1 新增）
+
+```
+症狀：小蔡自己做批量任務（連續搜尋+編輯），不用 sessions_spawn 子派，
+      導致 context 爆掉 → session 卡死 → Telegram 顯示轉圈圈不回應
+已發生案例：2/16 小蔡連續做 5 個知識庫更新（sonnet/gemini/devin/auto-gpt/trivy），
+            session 膨脹到 322KB 後卡死
+
+偵測特徵：
+1. Session .jsonl 檔案 >200KB（警告）/ >500KB（危險）
+2. 單一 session 內 web_search 次數 >5（自幹確認）
+3. 連續 toolCall >30 次沒有 user message 中斷
+
+自動處理（auto-checkpoint.sh v2.0）：
+1. 每 5 分鐘掃描活躍 session
+2. 偵測到自幹 → 嘗試插入系統訊息「停！用子派」
+3. Session >500KB → 告警，建議重啟 Gateway
+4. 記錄到 logs/auto-checkpoint.log
+
+手動處理：
+1. ./scripts/self-heal.sh cr8  → 檢查 session 狀態
+2. openclaw gateway restart    → 重啟 Gateway 斷開卡死 session
+3. 在 Telegram 重新給小蔡指令
+```
+
 ### 自動診斷修復腳本
 
 ```bash
@@ -748,6 +799,7 @@ CRM 專案  → projects/crm/modules/main/
 ./scripts/self-heal.sh cr4    # n8n 通知迴路
 ./scripts/self-heal.sh cr5    # evidenceLinks 驗證
 ./scripts/self-heal.sh cr7    # 未授權自動化偵測
+./scripts/self-heal.sh cr8    # session 膨脹 + 自幹偵測
 ```
 
 **Agent 使用規則：**
@@ -777,6 +829,20 @@ CRM 專案  → projects/crm/modules/main/
 ---
 
 ## 📋 版本變更日誌
+
+### v1.4.1 (2026-02-16)
+**變更類型**: 小改 — 自幹防呆 + session 膨脹偵測
+**變更原因**: 小蔡連續自己做知識庫更新（不用子派），context 爆掉 session 卡死
+
+| 項目 | 變更內容 |
+|------|---------|
+| ➕ 新增 | ⛔ 自幹防呆規則（強制子派條件 + 自幹白名單 + 違反後果） |
+| ➕ 新增 | CR-8: Session 膨脹 / 自幹偵測 |
+| ➕ 新增 | 禁止行為 3 條（主會話批量任務、連續搜尋、連續工具不回報） |
+| 🔧 強化 | auto-checkpoint.sh v2.0（session 監控 + 自幹攔截） |
+| 🔧 強化 | self-heal.sh v1.3（新增 check_cr8） |
+
+**驗證狀態**: ✅ 老蔡確認通過
 
 ### v1.4 (2026-02-16) - 定版
 **變更類型**: 中改 — 新增 5 個 SOP + 清理危險腳本 + 強化安全規範
@@ -915,4 +981,4 @@ CRM 專案  → projects/crm/modules/main/
 
 ---
 
-🤖 小蔡 | Agent 工作指南 v1.4 | 2026-02-16 定版
+🤖 小蔡 | Agent 工作指南 v1.4.1 | 2026-02-16 定版

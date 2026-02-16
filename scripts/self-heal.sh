@@ -1,12 +1,12 @@
 #!/bin/zsh
-# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.2
-# 對應 AGENTS.md v1.4 危機處理守則 CR-1~CR-7
+# self-heal.sh — OpenClaw 自動診斷修復腳本 v1.3
+# 對應 AGENTS.md v1.4.1 危機處理守則 CR-1~CR-8
 # 用法：
 #   ./scripts/self-heal.sh              # 全部檢查
 #   ./scripts/self-heal.sh check        # 只檢查不修復
 #   ./scripts/self-heal.sh fix          # 檢查 + 自動修復（綠燈項目）
 #   ./scripts/self-heal.sh rollback     # 回滾到上次驗證版本
-#   ./scripts/self-heal.sh <CR編號>     # 只跑特定檢查，如 cr1, cr2, cr3, cr4, cr5, cr7
+#   ./scripts/self-heal.sh <CR編號>     # 只跑特定檢查，如 cr1, cr2, cr3, cr4, cr5, cr7, cr8
 
 set -uo pipefail
 setopt nullglob 2>/dev/null || true  # zsh: no error on empty glob
@@ -394,6 +394,57 @@ check_cr7() {
 }
 
 # ============================================================
+# CR-8: Session 膨脹 / 自幹偵測
+# ============================================================
+check_cr8() {
+  log_head "CR-8: Session 膨脹 + 自幹偵測"
+
+  local sessions_dir="$HOME/.openclaw/agents/main/sessions"
+  if [ ! -d "$sessions_dir" ]; then
+    log_warn "sessions 目錄不存在: $sessions_dir"
+    return
+  fi
+
+  local bloated=0
+  local SESSION_SIZE_WARN=204800   # 200KB
+  local SESSION_SIZE_CRIT=512000   # 500KB
+
+  # 1. 掃描活躍 session（最近 1 小時有更新的）
+  for f in $(find "$sessions_dir" -name "*.jsonl" -mmin -60 2>/dev/null); do
+    local base=$(basename "$f")
+    local size=$(wc -c < "$f" | tr -d '[:space:]')
+
+    if [ "$size" -ge "$SESSION_SIZE_CRIT" ]; then
+      log_fail "Session 嚴重膨脹: $base (${size} bytes > 500KB) → 可能卡死"
+      bloated=1
+    elif [ "$size" -ge "$SESSION_SIZE_WARN" ]; then
+      log_warn "Session 偏大: $base (${size} bytes > 200KB) → 建議開新對話"
+    fi
+  done
+
+  # 2. 偵測自幹行為（連續 web_search 或大量 toolCall）
+  for f in $(find "$sessions_dir" -name "*.jsonl" -mmin -30 2>/dev/null); do
+    local base=$(basename "$f")
+    local search_count=$(grep -c -E '"web_search"|"brave_search"|"tavily"' "$f" 2>/dev/null || echo "0")
+    search_count=$(echo "$search_count" | head -1 | tr -d '[:space:]')
+    local tool_count=$(grep -c -E '"toolCall"' "$f" 2>/dev/null || echo "0")
+    tool_count=$(echo "$tool_count" | head -1 | tr -d '[:space:]')
+
+    if [ "$search_count" -gt 10 ]; then
+      log_fail "自幹偵測: $base 有 $search_count 次 web_search → 應該用 sessions_spawn"
+      bloated=1
+    fi
+    if [ "$tool_count" -gt 50 ]; then
+      log_warn "工具呼叫過多: $base 有 $tool_count 次 toolCall → context 可能快爆"
+    fi
+  done
+
+  if [ "$bloated" -eq 0 ]; then
+    log_ok "Session 大小正常，無自幹行為"
+  fi
+}
+
+# ============================================================
 # 基礎健康檢查
 # ============================================================
 check_infra() {
@@ -444,7 +495,7 @@ check_infra() {
 # 主流程
 # ============================================================
 echo "${BLUE}╔══════════════════════════════════════════╗${NC}"
-echo "${BLUE}║   OpenClaw Self-Heal v1.1                ║${NC}"
+echo "${BLUE}║   OpenClaw Self-Heal v1.3                ║${NC}"
 echo "${BLUE}║   模式: $MODE                              ║${NC}"
 echo "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
@@ -456,6 +507,7 @@ case "$MODE" in
   cr4) check_cr4 ;;
   cr5) check_cr5 ;;
   cr7) check_cr7 ;;
+  cr8) check_cr8 ;;
   rollback)
     echo "${BLUE}━━━ 回滾到驗證版本 ━━━${NC}"
     local latest_tag
@@ -507,6 +559,7 @@ case "$MODE" in
     check_cr4
     check_cr5
     check_cr7
+    check_cr8
     ;;
   *)
     echo "用法: $0 [check|fix|rollback|cr1|cr2|cr3|cr4|cr5|cr7]"
@@ -520,6 +573,7 @@ case "$MODE" in
     echo "  cr4      - 只跑 n8n 迴路"
     echo "  cr5      - 只跑 evidenceLinks 驗證"
     echo "  cr7      - 只跑未授權自動化偵測"
+    echo "  cr8      - 只跑 session 膨脹 + 自幹偵測"
     exit 0
     ;;
 esac

@@ -1,0 +1,131 @@
+# SOP-3: 系統診斷
+
+## metadata
+
+```yaml
+id: sop-03
+name: 系統診斷
+category: 系統管理
+tags: [診斷, self-heal, 健康檢查, docker, API, gateway, 錯誤排查, log]
+version: 2.0
+created: 2026-02-16
+trigger: 老蔡說「檢查一下」「看一下」「XXX 壞了」「怎麼不動了」
+priority: P1
+燈號: 🟢 檢查可直接做 / 🔴 修復要等老蔡批准
+```
+
+---
+
+## 目的
+
+快速定位系統問題，回報老蔡讓他決定怎麼修。你是診斷員不是醫生——找出問題，但修復要老蔡批准。
+
+---
+
+## 診斷流程
+
+### Step 1: 跑自動診斷
+
+```bash
+./scripts/self-heal.sh check
+```
+
+這會檢查 CR-1 到 CR-8 所有項目。記下輸出。
+
+### Step 2: 服務健康檢查
+
+```bash
+# Gateway 狀態
+openclaw gateway health
+
+# 任務板 API
+curl -s http://localhost:3001/api/health
+
+# Docker 容器
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# Ollama
+curl -s http://localhost:11434/api/tags | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'{len(d[\"models\"])} models loaded')"
+```
+
+### Step 3: 日誌檢查（最近 10 分鐘）
+
+```bash
+# Gateway 日誌
+tail -50 ~/.openclaw/logs/gateway.log 2>/dev/null
+
+# 任務板日誌
+tail -50 ~/openclaw任務面版設計/server/logs/*.log 2>/dev/null
+
+# 最近修改的檔案
+find ~/.openclaw/workspace -maxdepth 2 -mmin -10 -type f 2>/dev/null
+```
+
+### Step 4: 分類問題
+
+把發現的問題分成三類：
+
+- 🟢 **正常** — 服務在跑、沒有異常
+- 🟡 **警告** — 有潛在問題但不影響運行
+- 🔴 **異常** — 服務掛了或有嚴重問題
+
+### Step 5: 回報老蔡
+
+用下面的格式。
+
+---
+
+## 回報格式
+
+```
+🔍 系統診斷報告
+
+self-heal.sh: {通過/有問題}
+Gateway: {🟢 正常 / 🔴 停止}
+任務板 API: {🟢 正常 / 🔴 無回應}
+Docker: {🟢 X 個容器運行中 / 🔴 有容器停止}
+Ollama: {🟢 X 個模型 / 🔴 未運行}
+
+問題清單：
+1. 🔴 {問題描述} — 建議：{修復方式}
+2. 🟡 {問題描述} — 建議：{修復方式}
+
+需要你批准的操作：
+- {操作 1}
+- {操作 2}
+```
+
+---
+
+## 常見問題速查
+
+| 症狀 | 可能原因 | 診斷命令 | 修復（需批准） |
+|------|---------|---------|-------------|
+| Gateway 沒回應 | 進程掛了 | `openclaw gateway health` | `openclaw gateway restart` 🔴 |
+| API 404 | 任務板沒起 | `curl localhost:3001/api/health` | `cd ~/openclaw任務面版設計 && npm run dev` 🔴 |
+| Docker 容器停了 | crash 或 OOM | `docker ps -a` | `docker start {name}` 🔴 |
+| Ollama 沒回應 | 沒啟動 | `curl localhost:11434/api/tags` | `ollama serve &` 🔴 |
+| 小蔡卡住 | session 膨脹 | `./scripts/self-heal.sh cr8` | `openclaw gateway restart` 🔴 |
+| 任務 running 超過 24h | 卡死 | 任務板查詢 | PATCH status → failed 🟡 |
+| 根目錄有垃圾 | 小蔡亂放 | `./scripts/self-heal.sh cr2` | 移到 archive 🟡 |
+
+---
+
+## 錯誤處理
+
+| 狀況 | 處理方式 |
+|------|----------|
+| self-heal.sh 本身報錯 | 貼出錯誤訊息給老蔡 |
+| 沒有權限執行 | `chmod +x ./scripts/self-heal.sh` 然後重試 |
+| Docker 指令不存在 | 回報「Docker 未安裝或不在 PATH」 |
+| 診斷過程中發現敏感資料 | 不要貼出來，只回報「發現敏感資料在 {位置}」 |
+
+---
+
+## 禁止行為
+
+- ❌ 不可自行 `docker restart` — 🔴 紅燈
+- ❌ 不可自行 `openclaw gateway restart` — 🔴 紅燈
+- ❌ 不可刪除 log 檔案
+- ❌ 不可修改設定檔來「修復」問題
+- ❌ 不可連續診斷超過 10 次工具呼叫不回報
