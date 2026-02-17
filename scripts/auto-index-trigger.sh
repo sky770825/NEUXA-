@@ -78,7 +78,7 @@ check_need_indexing() {
 
 send_telegram_notification() {
     local MESSAGE=$1
-    local BOT_TOKEN="${TELEGRAM_CONTROL_BOT_TOKEN:-8357299731:AAHrBnVCEGjGy6b0g-3JhBArMnM9kt__Ncg}"
+    local BOT_TOKEN="${TELEGRAM_CONTROL_BOT_TOKEN:?請設定 TELEGRAM_CONTROL_BOT_TOKEN}"
     local CHAT_ID="${TELEGRAM_CHAT_ID:-5819565005}"
 
     # 發送通知

@@ -1,0 +1,17 @@
+@import "../lib/mixins.scss";
+
+.reporter {
+  .collapsible-indicator {
+    margin-right: 8px;
+    transform: rotate(-90deg);
+    transition: transform 150ms ease-out;
+  }
+
+  .is-open > .collapsible-header-wrapper > .collapsible-header > .collapsible-header-inner > .collapsible-indicator {
+    transform: rotate(0);
+  }
+
+  .test > .is-open > .collapsible-header-wrapper {
+    @include sticky-header-with-shadow;
+  }
+}

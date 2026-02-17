@@ -1,0 +1,558 @@
+@mixin nested-command-dashes($color) {
+  border-left: 1px dotted $color;
+  border-image-slice: 0 0 0 1;
+  border-image-source: repeating-linear-gradient(0deg, transparent, $color, $color 2px);
+}
+
+.reporter {
+  // rendered within ../hooks/hooks.tsx
+  .commands-container {
+    min-width: $reporter-contents-min-width;
+    padding: 0;
+    border: 1px solid $gray-900;
+    margin: 6px 8px 0 8px;
+    border-radius: 4px;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .command {
+    min-height: 28px;
+    font-family: $monospace;
+  }
+
+  // System Command Styles
+  .command-type-system {
+    user-select: none;
+  }
+
+  // Event Styles
+  .command-type-system,
+  .command-is-event {
+    font-style: italic;
+
+    .command-method,
+    .command-message {
+      color: $gray-500;
+    }
+  }
+
+  // Child Styles
+  .command-type-child {
+    .command-method-child {
+      &:before {
+        float: left;
+        content: "-";
+        margin-right: 2px;
+      }
+    }
+  }
+
+  .command-wrapper {
+    border-left: 2px solid transparent;
+    border-radius: 4px;
+    color: $gray-500;
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+
+    &.command-is-interactive:hover {
+      background-color: $gray-900;
+      cursor: pointer;
+
+      .command-expander > path {
+        stroke: $gray-700;
+      }
+    }
+
+    .command-wrapper-text {
+      display: flex;
+      flex-wrap: nowrap;
+      width: 100%;
+    }
+
+    .command-interceptions {
+      font-style: normal;
+
+      .status {
+        font-weight: 600;
+      }
+    }
+
+    // ensures alias & number of children commands don't break if reporter width is narrow
+    .alias-container {
+      margin-left: 0;
+      white-space: nowrap;
+
+      > * {
+        display: inline-block;
+        margin-left: 2px;
+      }
+
+      > *:first-child {
+        margin-left: 0;
+      }
+    }
+
+    .command-wrapper-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+
+      .command-prompt-get-code {
+        cursor: pointer;
+        font-family: $font-system;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .command-number-column {
+    @include gutter-alignment;
+    color: $gray-500;
+  }
+
+  // when no children, add padding to act as the .command-expander-column's width
+  // to prevent adding another element to the page
+  .command-number-column + span.command-pin-target {
+    margin-left: $gutter-margin;
+  }
+
+  .command-pin-target.command-group {
+    @include nested-command-dashes($gray-700);
+    min-height: 28px;
+
+    .command-group-block {
+      @include nested-command-dashes($gray-700);
+      @include group-indent-width;
+      min-height: 28px;
+    }
+  }
+
+  .command-group-no-children {
+    padding-left: 15px;
+  }
+
+  .command-wrapper-text-group {
+    margin-left: 15px;
+    width: 100%;
+  }
+
+  .command-wrapper-text-group-parent {
+    padding-left: 5px;
+  }
+
+  .nested-group-expander {
+    .command-expander {
+      position: relative;
+
+      margin-left: -16px !important; // Adjust this value to center the caret on the border
+    }
+  }
+
+  .command-info {
+    @include command-info-padding;
+
+    display: -webkit-box;
+    font-weight: 600;
+    margin-left: 0;
+    overflow: hidden;
+    width: 100%;
+    -webkit-line-clamp: 100;
+    -webkit-box-orient: vertical;
+
+    .command-aliases,
+    .command-message {
+      overflow: hidden;
+
+      .fa-circle {
+        padding: 4px;
+        padding-right: 2px;
+        display: inline-block;
+      }
+
+      .fa-circle.command-message-indicator-successful {
+        color: $jade-400;
+      }
+
+      .fa-circle.command-message-indicator-aborted {
+        color: $orange-400;
+      }
+
+      .fa-circle.command-message-indicator-bad {
+        color: $red-500;
+      }
+
+      .fa-circle.command-message-indicator-pending {
+        color: $indigo-400;
+      }
+    }
+  }
+
+  .command-message-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .command-method {
+    font-size: 12px;
+    margin-right: 12px;
+    min-width: fit-content;
+  }
+
+  // Command State Styles
+  .command-state-passed {
+    border-left: 2px solid $reporter-section-background;
+
+    &.command-is-interactive:hover {
+      border-left: 2px solid $gray-900;
+      border-radius: 0;
+    }
+
+    &:not(.command-is-event) .command-number {
+      color: $gray-700;
+    }
+
+    &:not(.command-is-event, .command-type-system) .command-method {
+      color: $gray-200;
+    }
+
+    .command-message {
+      color: $gray-500;
+    }
+  }
+
+  // pending is running in this case
+  .command-state-pending {
+    border-left: 2px solid $indigo-800;
+    border-radius: 0;
+    background-color: $gray-900;
+    cursor: default;
+    color: $indigo-200;
+
+    .command-number-column {
+      padding-top: 4px;
+      padding-bottom: 4px;
+
+      .fa-circle {
+        line-height: 18px;
+        display: inline-block;
+
+        .icon-light {
+          stroke: $gray-800;
+        }
+      }
+    }
+  }
+
+  .command-state-pending + .command-progress {
+    height: 2px;
+    background-color: $gray-900;
+
+    span {
+      animation-fill-mode: forwards;
+      animation-iteration-count: 1;
+      animation-name: progress-bar;
+      animation-timing-function: linear;
+      background: $indigo-500;
+      display: block;
+      float: right;
+      height: 100%;
+      transform-origin: right;
+      width: 100%;
+
+      @keyframes progress-bar {
+        100% {
+          transform: scaleX(0);
+        }
+      }
+    }
+  }
+
+  .command-state-warned {
+    color: $warn-text;
+
+    &:not(.command-type-system) {
+      border-left: $warn-border;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .command-number-column,
+    .command-method,
+    .command-message {
+      color: $warn-text;
+    }
+
+    .command-group {
+      border-color: $warn-text;
+      @include nested-command-dashes($warn-text);
+
+      .command-group-block {
+        border-color: $warn-text;
+        @include nested-command-dashes($warn-text);
+      }
+    }
+  }
+
+  .command-state-failed {
+    color: $err-header-text;
+
+    &:not(.command-type-system) {
+      border-left: 2px solid transparent;
+      border-radius: 0 4px 4px 0;
+      background-color: $err-header-background;
+
+      &.command-is-interactive:hover {
+        background: rgba($red-400, 0.3);
+      }
+    }
+
+    .command-number-column,
+    .command-method,
+    .command-message {
+      color: $err-header-text;
+    }
+
+    .command-group {
+      border-color: $err-header-text;
+      @include nested-command-dashes($err-header-text);
+
+      .command-group-block {
+        border-color: $err-header-text;
+        @include nested-command-dashes($err-header-text);
+      }
+    }
+  }
+
+  // Custom Styles for Specific Commands
+  // NOTE: assert does not support warned state
+  .command-name-assert {
+    .command-method {
+      span {
+        border-radius: 2px;
+        padding: 0 3px;
+        font-size: 12px;
+        display: inline-block;
+        line-height: 14px;
+      }
+    }
+
+    .command-message {
+      color: $gray-500;
+
+      strong {
+        margin: 0 3px;
+      }
+    }
+
+    .command-message-text {
+      white-space: normal;
+    }
+
+    .command-state-pending {
+      .command-method {
+        color: $pending;
+
+        span {
+          background-color: $pending;
+          color: $black;
+        }
+      }
+
+      .command-message {
+        color: $pending;
+
+        strong {
+          color: $gray-500;
+        }
+      }
+    }
+
+    .command-state-failed {
+      .command-method {
+        color: $fail;
+
+        span {
+          background-color: $fail;
+          color: $black;
+        }
+      }
+
+      .command-message {
+        color: $fail;
+
+        strong {
+          color: $red-300;
+        }
+      }
+    }
+
+    .command-state-passed {
+      .command-method {
+        color: $pass;
+
+        span {
+          background-color: $pass;
+          color: $black;
+        }
+      }
+
+      .command-message {
+        color: $jade-300;
+
+        strong {
+          color: $jade-200;
+        }
+      }
+    }
+  }
+
+  .command-pin-target {
+    width: 100%;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .command-message-text {
+    font-size: 12px;
+    white-space: initial;
+    word-wrap: inherit;
+    width: 100%;
+    margin-right: 8px;
+  }
+
+  // Styles for Uncaught Exception
+  .command-name-uncaught-exception {
+    // need extra spacing between (uncaught exception) and the error message
+    .command-message {
+      margin-left: 5px;
+    }
+  }
+
+  .command-controls {
+    display: flex;
+    padding-bottom: 4px;
+    padding-right: 2px;
+    padding-top: 4px;
+
+    svg {
+      color: rgba($gray-600, 0.25);
+      color: $gray-600;
+      vertical-align: text-top;
+    }
+
+    .command-invisible {
+      display: inline-block;
+      margin-left: 5px;
+      margin-right: 0;
+    }
+
+    label {
+      font-size: 85%;
+    }
+
+    > * {
+      display: inline-block;
+      margin-left: 2px;
+    }
+
+    > *:first-child {
+      margin-left: 0;
+    }
+  }
+
+  .command-error {
+    font-style: normal;
+  }
+
+  .command-pin {
+    color: $pinned;
+    font-size: 12px;
+    line-height: 1;
+    outline: none;
+    text-align: right;
+    width: 15px;
+    max-height: 20px;
+
+    .icon-light {
+      fill: $purple-700;
+    }
+  }
+
+  %command-expander-base {
+    flex-shrink: 0;
+    display: flex;
+
+    .command-expander {
+      color: $gray-500;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: transform 150ms ease-out;
+
+      path {
+        stroke: $gray-700;
+      }
+    }
+
+    .command-expander-is-open {
+      transform: rotate(0deg);
+    }
+  }
+
+  .command-expander-column {
+    @extend %command-expander-base;
+    height: 28px;
+    width: 24px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .command-expander-column-group {
+    @extend %command-expander-base;
+    @include group-indent-width;
+
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    max-width: 33px;
+    height: 28px;
+    width: 33px;
+    padding-left: 15px;
+    margin-left: -15px;
+
+    .command-expander {
+      margin: 0;
+    }
+  }
+
+  .command-is-pinned {
+    background: $indigo-1000;
+    border-left: 2px solid $pinned;
+    border-radius: 0 4px 4px 0;
+
+    &,
+    &:hover {
+      box-shadow: 0 1px 2px rgba($black, 0.2) inset;
+    }
+
+    &:hover {
+      background: $indigo-900;
+      border-left: 2px solid $pinned;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  // rendered within ../attempts/attempts.tsx
+  .no-commands {
+    background-color: $gray-1100;
+    border: 1px solid $gray-900;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 1px rgba($white, 0.05);
+    min-height: 28px;
+    padding: 9px;
+    margin: 8px 0;
+  }
+}

@@ -148,6 +148,18 @@ case "$cmd" in
         .status = $st | .finishedAt = (now | todate)
       else . end)
     ' "$DB" > "$tmp" && mv "$tmp" "$DB"
+    
+    # 同步更新 task 狀態
+    taskId=$(jq --arg id "$id" '.runs[] | select(.id == ($id | tonumber)) | .taskId' "$DB")
+    if [ -n "$taskId" ]; then
+      tmp=$(mktemp)
+      jq --arg tid "$taskId" --arg st "$status" '
+        .tasks |= map(if .id == ($tid | tonumber) then
+          .status = $st | .updatedAt = (now | todate)
+        else . end)
+      ' "$DB" > "$tmp" && mv "$tmp" "$DB"
+    fi
+    
     jq --arg id "$id" '.runs[] | select(.id == ($id | tonumber))' "$DB"
     ;;
 

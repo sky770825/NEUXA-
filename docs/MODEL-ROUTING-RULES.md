@@ -1,249 +1,171 @@
-# 模型路由規則 v2.2 - 定版
+# 模型路由規則 v2.3 - 定版
 
-> **版本**: v2.2 定版  
-> **定版日期**: 2026-02-15  
-> **變更摘要**: 新增四層 Agent 備援架構、Claude 代理機制、決策歸檔查詢流程  
-> **上一版本**: v2.1 (2026-02-14)  
+> **版本**: v2.3 定版
+> **定版日期**: 2026-02-16
+> **變更摘要**: 模型大換血 — Gemini 3 上線、Kimi 改收費、API Key 全換、Fallback 重排
+> **上一版本**: v2.2 (2026-02-15)
 > **適用範圍**: 所有任務分派
+
+---
+
+## 當前模型配置（2026-02-16）
+
+### API Key 與 Provider
+
+| Provider | Base URL | API 類型 | 計費方式 |
+|----------|----------|----------|----------|
+| **Google** | `generativelanguage.googleapis.com/v1beta` | google-generative-ai | Paid Tier 1（次數制） |
+| **Kimi** | `api.moonshot.ai/v1` | openai-completions | Token 計費（已非免費） |
+| **Anthropic** | `api.anthropic.com` | anthropic-messages | Token 計費 |
+| **xAI** | `api.x.ai/v1` | openai-completions | Token 計費 |
+| **Ollama** | `localhost:11434/v1` | openai-completions | $0 本地 |
+
+### 可用模型清單
+
+| 模型 ID | 顯示名稱 | 推理 | Context | 計費 | RPD/成本 |
+|---------|----------|------|---------|------|----------|
+| `gemini-3-flash-preview` | **Gemini 3 Flash** | ❌ | 1M | 次數制 | 數千次/天 |
+| `gemini-3-pro-preview` | **Gemini 3 Pro** | ✅ | 1M | 次數制 | 250次/天 |
+| `gemini-2.5-flash` | Gemini 2.5 Flash | ❌ | 1M | 次數制 | 備用 |
+| `gemini-2.5-pro` | Gemini 2.5 Pro | ✅ | 1M | 次數制 | 備用 |
+| `kimi-k2.5` | Kimi K2.5 | ❌ | 131K | Token | ⚠️ 已收費 |
+| `kimi-k2-turbo-preview` | Kimi K2 Turbo | ❌ | 262K | Token | ⚠️ 已收費 |
+| `claude-opus-4-6` | Claude Opus 4.6 | ✅ | 1M | Token | 最貴，備用 |
+| `claude-sonnet-4-5-20250929` | Claude Sonnet 4.5 | ✅ | 200K | Token | 中高 |
+| `claude-haiku-4-5-20251001` | Claude Haiku 4.5 | ❌ | 200K | Token | 便宜 |
+| `grok-4-1-fast` | Grok 4.1 Fast | ❌ | 2M | Token | 便宜 |
+| `grok-4-1-fast-reasoning` | Grok 4.1 Reasoning | ✅ | 2M | Token | 便宜 |
+| `qwen3:8b` | Qwen3 8B | ❌ | 32K | $0 | 本地 |
+| `deepseek-r1:8b` | DeepSeek R1 8B | ✅ | 32K | $0 | 本地 |
+| `qwen2.5:14b` | Qwen2.5 14B | ❌ | 128K | $0 | 本地 |
+
+---
+
+## 小蔡（Gateway）Fallback 鏈
+
+```
+主力: google/gemini-3-flash-preview
+  ↓ 失敗
+Fallback 1: kimi/kimi-k2.5
+  ↓ 失敗
+Fallback 2: google/gemini-3-pro-preview
+  ↓ 失敗
+Fallback 3: xai/grok-4-1-fast-reasoning
+  ↓ 失敗
+Fallback 4: anthropic/claude-haiku-4-5-20251001
+```
 
 ---
 
 ## 快速決策表
 
-| 任務類型 | 第一優先 | 備援順序 | 條件 |
+| 任務類型 | 第一優先 | 備援順序 | 說明 |
 |---------|---------|---------|------|
-| **日常對話** | 🐣 Kimi K2.5 | Claude → Gemini | 默認使用 |
-| **複雜決策** | 🐣 Kimi K2.5 | Claude → Grok | P0/P1 才用 Grok |
-| **監控報告** | 💎 Gemini Flash | Ollama | 免費優先 |
-| **前端/UI** | 🎨 Cursor | - | 訂閱制無限額度 |
-| **後端/系統** | 💻 Claude | Cursor | Codex 歸隊後優先 |
-| **查詢/分析** | 💻 Claude | Kimi | 代理期間優先 |
+| **日常對話** | Gemini 3 Flash | Kimi → Grok | 次數制，隨便用 |
+| **深度推理** | Gemini 3 Pro | Grok Reasoning → Sonnet | 250次/天，省著用 |
+| **監控報告** | Gemini 3 Flash | Ollama | 快速免費 |
+| **前端/UI** | Cursor (L4) | - | 訂閱制 |
+| **後端/系統** | Claude Code (L2) | Cursor | Max 5x 訂閱 |
+| **複雜決策** | Gemini 3 Pro | Claude → Grok | P0/P1 才升級 |
 
 ---
 
-## A. 四層 Agent 備援架構（NEW v2.2）
+## 四層 Agent 架構
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  L1 🐣  Kimi K2.5 (小蔡)                                │
-│     主要對話，指揮協調，預設啟動                         │
-│     成本：低 / 用途：日常協作、任務分派                   │
+│  L1 🐣  小蔡（Gateway）                                  │
+│     模型：Gemini 3 Flash（主力）                          │
+│     用途：日常對話、派工、Telegram 應答                     │
+│     成本：次數制，數千次/天，不用擔心 token                 │
 ├─────────────────────────────────────────────────────────┤
 │  L2 💻  Claude Code                                     │
-│     代理 Codex 任務，程式開發、技術決策                   │
-│     成本：訂閱制 / 用途：後端、API、系統故障              │
-│     狀態：暫時代理 Codex (2/19 後交還)                   │
+│     模型：Claude Opus 4.6                                │
+│     用途：程式開發、架構設計、複雜任務                      │
+│     成本：Max 5x 訂閱（$100/月），不算 token              │
 ├─────────────────────────────────────────────────────────┤
-│  L3 💎  Gemini 2.5 Flash                                │
-│     免費額度備援 (1,500次/天)                            │
-│     成本：$0 / 用途：監控報告、摘要、快速查詢              │
+│  L3 💎  備用大腦                                         │
+│     模型：Gemini 3 Pro / Kimi K2.5 / Grok               │
+│     用途：Fallback、第二意見、推理任務                     │
+│     成本：Pro 次數制(250/天) / Kimi+Grok Token 計費       │
 ├─────────────────────────────────────────────────────────┤
 │  L4 🎨  Cursor                                          │
-│     終極備援，訂閱制無額度限制                            │
-│     成本：固定月費 / 用途：前端/UI、重構、終極備援         │
+│     模型：Claude（IDE 內建）                              │
+│     用途：IDE 寫程式、重構、前端開發                       │
+│     成本：訂閱制                                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 備援觸發條件
+---
 
-| 層級 | 觸發條件 | 降級流程 |
-|------|---------|---------|
-| L1 → L2 | Kimi 無回應 / 額度耗盡 | 自動轉 Claude |
-| L2 → L3 | Claude 無回應 / 複雜度低 | 轉 Gemini 免費 |
-| L3 → L4 | Gemini 額度耗盡 | 轉 Cursor |
-| L2 → L4 | 程式開發任務 | 直接叫 Cursor |
+## 次數制 vs Token 制 重要提醒
+
+### 次數制模型（Gemini 全系列）
+- **一次 API call = 一次**，不管塞多少 token
+- **最佳策略：一次講完、一次做完**，避免來回浪費次數
+- Flash 一天幾千次，不用省
+- Pro 一天 250 次，要省
+
+### Token 制模型（Kimi / Grok / Claude API）
+- 每個 token 都算錢
+- Kimi 已非免費，注意用量
+- Claude API 最貴（Opus: $15/M input, $75/M output）
+- Grok 便宜（$0.2/M input, $0.5/M output）
+
+### 訂閱制（Claude Max 5x / Cursor）
+- 固定月費，不算 token 也不算次數
+- Claude Max 5x = 只有 Claude Code CLI 能用，API 不算
+- Cursor = IDE 內用，不限量
 
 ---
 
-## B. 主力模型（優先使用）
+## 成本保護機制
 
-### 1️⃣ Kimi K2.5（日常主模型）
-| 項目 | 內容 |
-|------|------|
-| **用途** | 日常協作、任務調度、一般分析、指揮協調 |
-| **成本** | 低（~$0.0005/1k tokens input） |
-| **優勢** | 速度快、上下文理解佳、成本低 |
-| **限制** | 複雜推理能力一般 |
-| **何時用** | 默認模型，所有日常任務優先 |
-| **備援** | Claude → Gemini → Cursor |
-
-### 2️⃣ Claude Code（代理/技術專用）
-| 項目 | 內容 |
-|------|------|
-| **用途** | 代理 Codex 任務、程式開發、技術決策、系統故障 |
-| **成本** | 訂閱制（月費固定，無額度限制） |
-| **優勢** | 推理能力強、程式開發專精 |
-| **限制** | 需明確任務範圍 |
-| **何時用** | Kimi 無法處理 / 技術任務 / Codex 代理期間 |
-| **狀態** | 暫時代理 Codex (至 2/19) |
-
-### 3️⃣ Gemini 2.5 Flash（快速摘要專用）
-| 項目 | 內容 |
-|------|------|
-| **用途** | 快速摘要、監控報告、低成本短任務、備援查詢 |
-| **成本** | 免費額度 1,500次/天 |
-| **優勢** | 超快速、免費、適合短文本 |
-| **限制** | 深度分析能力有限 |
-| **何時用** | 監控、日報、快速查詢、Kimi/Claude 降級時 |
-
-### 4️⃣ Ollama（本地模型）
-| 項目 | 內容 |
-|------|------|
-| **用途** | 本地可離線任務、低敏感資訊、固定格式輸出 |
-| **成本** | $0（完全免費） |
-| **優勢** | 隱私安全、離線可用、零成本 |
-| **限制** | 能力較弱，推理不足 |
-| **何時用** | 監控報告、格式轉換、無網路場景 |
-
----
-
-## C. 決策歸檔查詢流程（NEW v2.2）
-
-```
-任務啟動
-    ↓
-查詢決策歸檔？
-    ↓ YES
-讀取 archive/decisions/README.md
-    ↓
-找到相關決策檔案
-    ↓
-載入決策內容 → 執行任務
-    ↓ NO
-標準路由流程
-```
-
-### 決策查詢優先級
-
-| 順序 | 動作 | 說明 |
-|------|------|------|
-| 1 | 檢查 `archive/decisions/README.md` | 先看索引 |
-| 2 | 讀取相關決策檔案 | 如 database-architecture.md |
-| 3 | 確認決策狀態 | ✅ 已實施 / 🟡 進行中 |
-| 4 | 載入決策內容到 Context | 避免重複討論 |
-
----
-
-## D. 任務類型路由決策樹
-
-### 日常對話
-```
-Kimi K2.5 (L1)
-    ↓ 無回應/額度問題
-Claude Code (L2)
-    ↓ 無回應
-Gemini Flash (L3)
-    ↓ 額度耗盡
-Cursor (L4)
-```
-
-### 技術/程式開發
-```
-Claude Code (L2) ← 目前代理 Codex
-    ↓ 無回應
-Cursor (L4)
-    ↓ 需要 Kimi 協調
-Kimi K2.5 (L1)
-```
-
-### 監控/報告
-```
-Gemini Flash (L3) ← 免費優先
-    ↓ 額度耗盡
-Ollama ($0)
-    ↓ 離線/無法用
-Kimi K2.5 (L1)
-```
-
-### 複雜決策 (P0/P1)
-```
-Kimi K2.5 (L1) ← 先評估
-    ↓ 複雜度確認
-Grok 4.1 (高成本)
-    ↓ 需老蔡批准
-執行並回報
-```
-
----
-
-## E. 成本保護機制
-
-### 超時處理
-```
-連續 2 次 timeout:
-  1. 加 timeout（120s → 180s）
-  2. 再嘗試 1 次
-  3. 仍失敗 → 自動降級到下一層
-
-連續 3 次 failed:
-  觸發 [ESCALATE] 升級到 L4 Cursor
-```
-
-### 成本控制
 | 模型 | 限制 | 備援 |
 |------|------|------|
-| Kimi | 額度 90% 警告 | 自動轉 Claude |
-| Gemini | 1,500次/天 | 用完轉 Ollama/Kimi |
-| Grok | 需老蔡確認 | 自動改 Kimi |
-| Opus | 完全禁用 | 除非老蔡明確批准 |
+| Gemini 3 Flash | 幾千次/天 | 用完轉 Kimi |
+| Gemini 3 Pro | 250次/天 | 用完轉 Grok |
+| Kimi | Token 收費，注意用量 | 轉 Grok/Haiku |
+| Grok | Token 收費，便宜 | 轉 Haiku |
+| Opus API | **完全禁用** | 除非老蔡明確批准 |
 
 ---
 
-## F. 回報規範（必帶欄位）
+## 設定檔位置
 
-```
-【小蔡執行-TASK_NAME】
-task_id: task_xxx
-run_id: run_xxx
-model_used: kimi/kimi-k2.5 | claude/claude-code | gemini/gemini-2.5-flash | ollama/qwen3:8b
-layer: L1 | L2 | L3 | L4
-duration: XXs
-status: success | failed | timeout | escalated
-retry: 0 | 1 | 2
-summary: 任務摘要
-✅ 完成
-```
+| 檔案 | 用途 | 誰管 |
+|------|------|------|
+| `~/.openclaw/openclaw.json` | **主設定檔**（模型、API Key、Fallback） | 老蔡/Claude Code |
+| `~/.openclaw/agents/main/agent/models.json` | Gateway runtime 快取（自動生成，不要手改） | Gateway 自動管理 |
+
+**重要：`models.json` 是 gateway 啟動時自動生成的，不要手動修改它。所有模型配置以 `openclaw.json` 為準。**
 
 ---
 
-## G. 版本變更日誌
+## 版本變更日誌
 
-### v2.2 (2026-02-15) - 定版
-**變更類型**: 架構級更新  
-**變更原因**: 新增四層備援架構、Claude 代理機制、決策歸檔流程
+### v2.3 (2026-02-16) - 定版
+**變更類型**: 模型配置大改
+**變更原因**: Gemini 3 上線、Kimi 改收費、API Key 全換
 
 | 項目 | 變更內容 |
 |------|---------|
-| ➕ 新增 | 四層 Agent 備援架構（L1-L4） |
-| ➕ 新增 | Claude Code 作為 L2 備援角色 |
-| ➕ 新增 | 決策歸檔查詢優先流程 |
-| ➕ 新增 | 備援觸發條件與降級流程 |
-| 🔧 調整 | 任務路由決策樹（納入四層架構） |
-| 🔧 調整 | 成本保護機制（層級降級） |
+| ➕ 新增 | Gemini 3 Pro + Gemini 3 Flash |
+| 🔧 調整 | 主力模型從 Kimi K2.5 → Gemini 3 Flash |
+| 🔧 調整 | Fallback 順序重排 |
+| ⚠️ 注意 | Kimi K2.5 已非免費，改為 Fallback #1 |
+| 🔧 調整 | 所有 API Key 已更新（Google/Kimi/Anthropic） |
+| ➕ 新增 | 次數制 vs Token 制說明 |
+| ➕ 新增 | 設定檔位置說明（openclaw.json vs models.json） |
 
 **驗證狀態**: ✅ 老蔡確認通過，正式定版
 
+### v2.2 (2026-02-15) - 定版
+四層 Agent 備援架構、Claude 代理機制、決策歸檔流程
+
 ### v2.1 (2026-02-14) - 定版
-**變更類型**: 功能補充  
-**變更內容**: 補充其他模型路由、成本保護機制、檢查清單
+補充其他模型路由、成本保護機制、檢查清單
 
 ---
 
-## H. 定版規則
-
-```
-定版後修改 = 必須開新版本
-├── 小改（錯字、格式）→ v2.2.1
-├── 中改（內容更新）→ v2.3
-└── 大改（架構變更）→ v3.0
-
-變更流程：
-1. 比對舊版 vs 新版
-2. 老蔡確認「對，這是要定版的內容」
-3. 更新版本號 + 變更日誌
-4. Git commit 標記定版
-```
-
----
-
-🐣 小蔡 | 模型路由規則 v2.2 | 2026-02-15 定版
+🐣 小蔡 | 模型路由規則 v2.3 | 2026-02-16 定版

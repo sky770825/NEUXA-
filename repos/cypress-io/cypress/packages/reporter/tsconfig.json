@@ -1,0 +1,23 @@
+{
+  "extends": "../ts/tsconfig.json",
+  "compilerOptions": {
+    // needed for mobx
+    "useDefineForClassFields": true,
+    "types": [
+      "node",
+      "cypress",
+      "cypress-real-events",
+      "react"
+    ], /* Type declaration files to be included in compilation. */
+    "importsNotUsedAsValues": "remove",
+    "lib": ["DOM"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "cypress/**/*.ts"
+  ],
+  "files": [
+    "./../ts/index.d.ts", "./index.d.ts"
+  ]
+}

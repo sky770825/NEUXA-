@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.tailscale.funnel-healthcheck</string>
+    <key>Comment</key>
+    <string>每 10 分鐘檢查 LINE webhook Funnel，失效時自動重啟</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>600</integer>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>/Users/caijunchang/.openclaw/scripts/tailscale-funnel-healthcheck.sh</string>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/Users/caijunchang/.openclaw/logs/funnel-healthcheck.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/caijunchang/.openclaw/logs/funnel-healthcheck.err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>HOME</key>
+      <string>/Users/caijunchang</string>
+      <key>PATH</key>
+      <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    </dict>
+  </dict>
+</plist>

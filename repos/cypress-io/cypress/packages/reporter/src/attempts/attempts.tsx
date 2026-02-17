@@ -1,0 +1,114 @@
+import cs from 'classnames'
+import { observer } from 'mobx-react'
+import React, { useEffect, useState } from 'react'
+
+import type { TestState } from '@packages/types'
+import Agents from '../agents/agents'
+import Collapsible from '../collapsible/collapsible'
+import Hooks from '../hooks/hooks'
+import Routes from '../routes/routes'
+import TestError from '../errors/test-error'
+import type TestModel from '../test/test-model'
+import type AttemptModel from './attempt-model'
+import Sessions from '../sessions/sessions'
+
+import CollapseIcon from '@packages/frontend-shared/src/assets/icons/collapse_x16.svg'
+import ExpandIcon from '@packages/frontend-shared/src/assets/icons/expand_x16.svg'
+import StateIcon from '../lib/state-icon'
+
+const NoCommands = () => (
+  <ul className='hooks-container'>
+    <li className='no-commands'>
+      No commands were issued in this test.
+    </li>
+  </ul>
+)
+
+const AttemptHeader = ({ index, state }: { index: number, state: TestState }) => (
+  <span className='attempt-tag'>
+    <StateIcon state={state} className="attempt-state" iconSize='8' />
+    <span className='attempt-tag-text'>
+      Attempt {index + 1}
+    </span>
+    <span className='open-close-indicator'>
+      <CollapseIcon className='collapse-icon' />
+      <ExpandIcon className='expand-icon' />
+    </span>
+  </span>
+)
+
+interface AttemptProps {
+  model: AttemptModel
+  scrollIntoView: Function
+}
+
+const Attempt: React.FC<AttemptProps> = observer(({ model, scrollIntoView }) => {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    if (isMounted) {
+      scrollIntoView()
+    } else {
+      setIsMounted(true)
+    }
+  })
+
+  return (
+    <li
+      key={model.id}
+      className={cs('attempt-item', `attempt-state-${model.state}`)}
+    >
+      <Collapsible
+        header={<AttemptHeader index={model.id} state={model.state} />}
+        hideExpander
+        headerClass='attempt-name'
+        contentClass='attempt-content'
+        isOpen={model.isOpen}
+        onOpenStateChangeRequested={(isOpen: boolean) => model.setIsOpen(isOpen)}
+      >
+        <div className={`attempt-${model.id + 1}`}>
+          <Sessions model={model.sessions} />
+          <Agents model={model} />
+          <Routes model={model} />
+          <div className='runnable-commands-region'>
+            {model.hasCommands ? <Hooks model={model} scrollIntoView={scrollIntoView} /> : <NoCommands />}
+          </div>
+          {model.state === 'failed' && (
+            <div className='attempt-error-region'>
+              <TestError {...model.error} />
+            </div>
+          )}
+        </div>
+      </Collapsible>
+    </li>
+  )
+})
+
+Attempt.displayName = 'Attempt'
+
+interface AttemptsProps {
+  test: TestModel
+  isSingleStudioTest?: boolean
+  scrollIntoView: Function
+}
+
+const Attempts: React.FC<AttemptsProps> = observer(({ test, isSingleStudioTest, scrollIntoView }: AttemptsProps) => {
+  return (<ul className={cs('attempts', {
+    'has-multiple-attempts': test.hasMultipleAttempts,
+    'single-studio-test': Boolean(isSingleStudioTest),
+  })}>
+    {test.attempts.map((attempt) => {
+      return (
+        <Attempt
+          key={attempt.id}
+          scrollIntoView={scrollIntoView}
+          model={attempt}
+        />
+      )
+    })}
+  </ul>)
+})
+
+Attempts.displayName = 'Attempts'
+
+export default Attempts

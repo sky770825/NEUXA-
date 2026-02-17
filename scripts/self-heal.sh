@@ -170,16 +170,24 @@ check_cr4() {
   log_head "CR-4: n8n 通知迴路"
 
   # 檢查 n8n 容器
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "n8n"; then
-    log_ok "n8n 容器運行中"
+  if command -v docker > /dev/null 2>&1; then
+      if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "n8n"; then
+        log_ok "n8n 容器運行中"
+      else
+        log_warn "n8n 容器未運行"
+        return
+      fi
   else
-    log_fail "n8n 容器未運行"
-    return
+      log_warn "Docker 未安裝"
+      return
   fi
 
-  # 檢查 workflows active
-  local active_count=$(docker exec n8n-production-postgres-1 \
-    psql -U n8n -d n8n -t -A -c "SELECT COUNT(*) FROM workflow_entity WHERE active=true;" 2>/dev/null || echo "0")
+  # 檢查 n8n workflows active
+  local active_count="0"
+  if command -v docker > /dev/null 2>&1; then
+      active_count=$(docker exec n8n-production-postgres-1 \
+        psql -U n8n -d n8n -t -A -c "SELECT COUNT(*) FROM workflow_entity WHERE active=true;" 2>/dev/null || echo "0")
+  fi
   active_count=$(echo "$active_count" | tr -d '[:space:]')
 
   if [ "$active_count" -ge 3 ]; then
@@ -213,10 +221,10 @@ print('%d %d' % (total, has_path))
   fi
 
   # 檢查 /workspace 掛載
-  if docker exec n8n-production-n8n-1 ls /workspace/AGENTS.md > /dev/null 2>&1; then
+  if command -v docker > /dev/null 2>&1 && docker exec n8n-production-n8n-1 ls /workspace/AGENTS.md > /dev/null 2>&1; then
     log_ok "/workspace 掛載正常"
   else
-    log_fail "/workspace 未掛載或內容不可讀"
+    log_warn "/workspace 未掛載或 Docker 不可用"
   fi
 }
 

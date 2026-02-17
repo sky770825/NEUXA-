@@ -1,0 +1,296 @@
+$code-border-radius: 4px;
+
+.reporter {
+  .error {
+    background-color: $gray-1100;
+    min-height: 20px;
+    padding: 24px;
+
+    h2 {
+      color: $err-text;
+      font-size: 1.3em;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 0.6em;
+
+      a {
+        float: right;
+      }
+    }
+
+    p,
+    ul,
+    ol {
+      font-size: 1.1em;
+    }
+
+    pre {
+      border-color: $orange-300;
+      color: $orange-300;
+      display: block;
+      width: 100%;
+      white-space: initial;
+      overflow: hidden;
+      line-height: 1.6;
+
+      code {
+        font-family: inherit;
+      }
+    }
+
+    ul {
+      line-height: 1.6;
+      margin-bottom: 10px;
+      padding-left: 2em;
+    }
+
+    ul li {
+      list-style: disc;
+    }
+
+    ol li {
+      list-style: decimal;
+    }
+  }
+
+  .recovered-test-err {
+    .runnable-err-header,
+    .runnable-err-body {
+      padding-left: 48px;
+      display: flex;
+
+      .err-group-block {
+        @include group-indent-width;
+
+        border-left: 1px dotted $err-header-text;
+        border-image-slice: 0 0 0 1;
+        border-image-source: repeating-linear-gradient(0deg, transparent, $err-header-text, $err-header-text 2px);
+
+        &:first-of-type {
+          width: 16px;
+          min-width: 16px;
+        }
+      }
+    }
+
+    .runnable-err-content {
+      padding: 0 12px 0 0;
+    }
+  }
+
+  .runnable-err-content {
+    width: 100%;
+
+    .is-open {
+      > .runnable-err-stack-expander .err-collapsible-indicator {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .runnable-err {
+    background-color: $err-background;
+    border-left: 2px solid transparent;
+    border-radius: 4px;
+    clear: both;
+    color: $err-text;
+    font-family: $monospace;
+    font-style: normal;
+    margin-bottom: 0;
+    margin-top: 2px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    user-select: initial;
+    overflow: auto;
+  }
+
+  .runnable-err-header {
+    background-color: $err-header-background;
+    display: flex;
+    font-weight: bold;
+    justify-content: space-between;
+
+    .runnable-err-icon {
+      @include gutter-alignment;
+
+      &.runnable-err-icon-group {
+        width: auto;
+      }
+
+      svg {
+        color: $red-400;
+        align-self: center;
+      }
+    }
+
+    .runnable-err-name {
+      @include command-info-padding;
+
+      color: $err-header-text;
+      flex: auto;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 20px;
+
+      margin-left: $gutter-margin;
+    }
+  }
+
+  .runnable-err-docs-url {
+    margin-left: 0.5em;
+    cursor: pointer;
+    font-family: $font-system;
+  }
+
+  .runnable-err-message {
+    font-family: $font-system;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 8px 14px;
+
+    code {
+      background-color: rgba($black, 0.2);
+      border-radius: 4px;
+      color: $err-code-text;
+      font-size: 12px;
+      font-family: $monospace;
+      padding: 2px 5px;
+    }
+
+    strong {
+      color: $err-code-text;
+      font-weight: bold;
+    }
+  }
+
+  .runnable-err-stack-expander {
+    align-items: center;
+    border-top: 1px solid #4b364c40;
+    display: flex;
+    padding: 16px 14px;
+    flex-wrap: wrap-reverse;
+    .collapsible-header {
+      flex-grow: 1;
+
+      &:focus {
+        outline: 0;
+
+        div {
+          background: $red-900;
+        }
+      }
+
+      &:active,
+      &:hover {
+        .collapsible-header-text {
+          color: $red-100;
+        }
+        .err-collapsible-indicator path {
+          stroke: $red-200;
+        }
+      }
+
+      .collapsible-header-inner {
+        cursor: pointer;
+        outline: none;
+        padding: 0 !important;
+        width: 100%;
+
+        .collapsible-header-text {
+          color: $red-300;
+          font-size: 14px;
+          font-weight: 500;
+          display: inline-flex;
+          gap: 4px;
+          align-items: center;
+        }
+      }
+    }
+
+    .runnable-err-print {
+      &:focus {
+        outline: none;
+      }
+
+      &:active,
+      &:hover {
+        div {
+          color: $red-100;
+        }
+
+        svg {
+          color: $red-200;
+        }
+      }
+
+      div {
+        color: $red-300;
+        cursor: pointer;
+        font-family: $font-system;
+        font-size: 14px;
+        font-weight: 500;
+        height: 100%;
+        width: 100%;
+
+        &:focus {
+          outline: none;
+        }
+
+        svg {
+          color: $red-400;
+          margin: 4px 3px;
+          vertical-align: middle;
+        }
+
+        span {
+          vertical-align: middle;
+        }
+      }
+    }
+  }
+
+  .runnable-err-stack-trace {
+    font-family: $monospace;
+    overflow: auto;
+    padding: 0 10px 10px;
+
+    .err-stack-line {
+      white-space: pre;
+
+      // ensure empty lines still take up vertical space
+      &:empty:before {
+        content: " ";
+      }
+    }
+  }
+
+  .test-err-code-frame {
+    background-color: $gray-1100;
+    border: 1px dashed rgba(245, 154, 169, 0.1);
+    border-radius: $code-border-radius;
+    margin: 0 0 10px;
+
+    .runnable-err-file-path {
+      background: rgba($gray-900, 0.5);
+      border-top-left-radius: $code-border-radius;
+      border-top-right-radius: $code-border-radius;
+      display: block;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 8px;
+      word-break: break-all;
+
+      svg {
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+    }
+
+    pre {
+      border: 0;
+      border-bottom-left-radius: $code-border-radius;
+      border-bottom-right-radius: $code-border-radius;
+      padding-left: 10px;
+    }
+  }
+}

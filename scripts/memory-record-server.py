@@ -17,7 +17,7 @@ COMPLETION_HANDLER = os.path.join(WORKSPACE, "scripts/task-completion-handler.sh
 PORT = 8765  # 記憶記錄服務器端口
 
 # Telegram 配置
-TELEGRAM_BOT_TOKEN = "8357299731:AAHrBnVCEGjGy6b0g-3JhBArMnM9kt__Ncg"
+TELEGRAM_BOT_TOKEN = os.environ.get("CAIJ_N8N_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = "5819565005"
 
 
