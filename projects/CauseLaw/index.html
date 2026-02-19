@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>因果 | 天地運作的底層協議</title>
+    <meta name="description" content="揭示宇宙因果循環的真相。沒有審判者，只有系統在執行。">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+            line-height: 1.8;
+        }
+
+        /* HERO */
+        #hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 100%);
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            background: linear-gradient(135deg, #00d4ff, #9b59b6, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 4s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 0.2em;
+            margin: 1rem 0 2rem;
+        }
+
+        .hero-quote {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.6);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            font-style: italic;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 3rem;
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .cta-button:hover {
+            background: #00d4ff;
+            color: #0a0a0f;
+            box-shadow: 0 0 30px #00d4ff;
+        }
+
+        /* TRUTH SECTION */
+        #truth {
+            padding: 6rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: 0.2em;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 4rem;
+        }
+
+        .truth-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .truth-card:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0,212,255,0.2);
+        }
+
+        .truth-number {
+            font-size: 0.9rem;
+            color: #00d4ff;
+            letter-spacing: 0.3em;
+            margin-bottom: 0.5rem;
+        }
+
+        .truth-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+
+        .truth-content {
+            color: rgba(255,255,255,0.7);
+            line-height: 2;
+        }
+
+        /* INTERACTIVE DEMO */
+        #demo {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, #0a0a0f 0%, rgba(0,212,255,0.05) 50%, #0a0a0f 100%);
+            text-align: center;
+        }
+
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 3rem 0;
+        }
+
+        .demo-btn {
+            padding: 1rem 2rem;
+            border: 2px solid;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn.good { border-color: #00d4ff; color: #00d4ff; }
+        .demo-btn.good:hover { background: #00d4ff; color: #0a0a0f; }
+        
+        .demo-btn.bad { border-color: #ff6b6b; color: #ff6b6b; }
+        .demo-btn.bad:hover { background: #ff6b6b; color: #0a0a0f; }
+
+        .demo-display {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 3rem;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .demo-result {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-explanation {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .footer-quote {
+            font-size: 1.3rem;
+            font-style: italic;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 2rem;
+        }
+
+        .footer-quote span {
+            color: #ffd700;
+        }
+
+        .share-btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            margin: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .share-btn:hover {
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <!-- HERO -->
+    <section id="hero">
+        <h1 class="hero-title">因果</h1>
+        <p class="hero-subtitle">天地運作的底層協議</p>
+        <p class="hero-quote">
+            「沒有審判者，只有系統在執行。<br>
+            你的每個選擇，都在編寫你的輸出。」
+        </p>
+        <a href="#truth" class="cta-button">揭開真相</a>
+    </section>
+
+    <!-- TRUTH -->
+    <section id="truth">
+        <h2 class="section-title">四個維度的真相</h2>
+        <p class="section-subtitle">因果不是道德審判，是宇宙級的物理法則</p>
+        
+        <div class="truth-card">
+            <div class="truth-number">DIMENSION 01</div>
+            <h3 class="truth-title">物理真相：作用與反作用</h3>
+            <p class="truth-content">
+                推牆，牆推你。每個力都有等大反向的反作用力。<br><br>
+                這不是懲罰，是物理。
+            </p>
+        </div>
+
+        <div class="truth-card">
+            <div class="truth-number">DIMENSION 02</div>
+            <h3 class="truth-title">資訊真相：資料永不消失</h3>
+            <p class="truth-content">
+                你以為刪除的，只是標記為隱藏。<br><br>
+                每個念頭改變大腦神經。每句話語影響他人心智。
+            </p>
+        </div>
+
+        <div class="truth-card">
+            <div class="truth-number">DIMENSION 03</div>
+            <h3 class="truth-title">系統真相：迴路與共振</h3>
+            <p class="truth-content">
+                你播種什麼頻率，收穫什麼共振。<br><br>
+                善意創造信任，惡意創造防禦。系統會記住你的行為模式。
+            </p>
+        </div>
+
+        <div class="truth-card">
+            <div class="truth-number">DIMENSION 04</div>
+            <h3 class="truth-title">時間真相：延遲與複利</h3>
+            <p class="truth-content">
+                短期看不到結果，不代表規則不存在。<br><br>
+                時間是最大的編譯器，會執行所有輸入。
+            </p>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE DEMO -->
+    <section id="demo">
+        <div class="demo-container">
+            <h2 class="section-title">🎮 因果模擬器</h2>
+            <p class="section-subtitle">選擇你的輸入，看看系統如何回應</p>
+            
+            <div class="demo-buttons">
+                <button class="demo-btn good" onclick="showResult('good')">善意言行</button>
+                <button class="demo-btn bad" onclick="showResult('bad')">惡意言行</button>
+            </div>
+
+            <div class="demo-display">
+                <div id="demo-result" class="demo-result">選擇一個選項，看見因果</div>
+                <div id="demo-explanation" class="demo-explanation"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p class="footer-quote">
+            「天地不判斷，只執行。<br>
+            而這，就是最大的<span>慈悲</span>。」
+        </p>
+        <a href="#" class="share-btn" onclick="shareSite()">分享這個真相</a>
+        <p style="margin-top: 2rem; color: rgba(255,255,255,0.4);">
+            The Protocol of Karma | 因果的底層協議
+        </p>
+    </footer>
+
+    <script>
+        // 因果模擬器
+        function showResult(type) {
+            const resultEl = document.getElementById('demo-result');
+            const explainEl = document.getElementById('demo-explanation');
+            
+            if (type === 'good') {
+                resultEl.innerHTML = '🌊 正能量漣漪擴散中...';
+                resultEl.style.color = '#00d4ff';
+                explainEl.innerHTML = '善意創造信任，信任降低交易成本，系統回饋你更多連結與機會。';
+            } else if (type === 'bad') {
+                resultEl.innerHTML = '⚡ 負能量反彈迴路啟動...';
+                resultEl.style.color = '#ff6b6b';
+                explainEl.innerHTML = '惡意創造防禦，防禦增加摩擦成本，系統隔離你以保護整體。';
+            }
+        }
+
+        // 分享功能
+        function shareSite() {
+            const text = '我發現了宇宙運作的底層代碼：因果不是道德審判，是物理法則。';
+            if (navigator.share) {
+                navigator.share({
+                    title: '因果 | 天地運作的底層協議',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                alert('已複製分享文案，請貼到您的社交平台：\n\n' + text + '\n' + window.location.href);
+            }
+        }
+
+        // 平滑滾動
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
