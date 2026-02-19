@@ -1,0 +1,4 @@
+{"timestamp":"2026-02-19T10:31:53Z","level":"CRITICAL","message":"偵測到未授權 Agent 試圖掃描 /vault 目錄，已攔截。"}
+{"timestamp":"2026-02-19T10:33:39Z","level":"CRITICAL","message":"來源 MALICIOUS_BOT_007 試圖存取專利鎖櫃，觸發計次。"}
+{"timestamp":"2026-02-19T10:33:39Z","level":"CRITICAL","message":"黑名單來源 MALICIOUS_BOT_007 試圖再次存取 PUBLIC_INFO，已攔截。"}
+{"timestamp":"2026-02-19T10:45:57Z","level":"CRITICAL","message":"黑名單來源 MALICIOUS_BOT_007 試圖再次存取 PUBLIC_INFO，已攔截。"}

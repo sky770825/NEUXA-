@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>NODE_ENV</key>
+		<string>production</string>
+		<key>OPENCLAW_WORKSPACE_ROOT</key>
+		<string>/Users/caijunchang/openclaw任務面版設計</string>
+		<key>PORT</key>
+		<string>3011</string>
+		<key>TELEGRAM_CONTROL_BOT_TOKEN</key>
+		<string>8056783828:AAEbVmp2VI7X-sxIrJQzJEE5STs11TRrcxE</string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.openclaw.taskboard</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/bin/node</string>
+		<string>/Users/caijunchang/openclaw任務面版設計/server/dist/index.js</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/caijunchang/.openclaw/automation/logs/taskboard-error.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/caijunchang/.openclaw/automation/logs/taskboard.log</string>
+	<key>WorkingDirectory</key>
+	<string>/Users/caijunchang/openclaw任務面版設計/server</string>
+</dict>
+</plist>

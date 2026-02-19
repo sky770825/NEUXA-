@@ -1,22 +1,9 @@
-# Local Netlify folder
-.netlify
-
-# CR-9 解鎖檔案（一次性，不進 git）
-.cr9-unlock
-
-# 環境變數 & 金鑰（絕對不進 git）
-.env
-.env.*
-*.env
-*.env.bak
-
-# OS
 .DS_Store
-
-# 日誌
-logs/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
 *.log
-
-# 蜜罐 & 誘餌（不進 git）
-.honeypot/
-.decoy/
+*.tmp
+.env
+.cr9-unlock

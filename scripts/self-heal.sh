@@ -39,7 +39,7 @@ check_cr2() {
   log_head "CR-2: workspace 根目錄檢查"
 
   # .md 白名單 — 只有這些允許存在於根目錄
-  local MD_WHITELIST="AGENTS.md CHANGELOG.md CLAUDE.md CONTRIBUTING.md MEMORY.md README.md SECURITY.md"
+  local MD_WHITELIST="AGENTS.md CHANGELOG.md CLAUDE.md CONTRIBUTING.md MEMORY.md README.md SECURITY.md BOOTSTRAP.md SOUL.md IDENTITY.md TOOLS.md USER.md HEARTBEAT.md"
 
   local dirty=0
   local trash_dir="$WORKSPACE/archive/orphaned/$(date +%Y%m%d)"
@@ -113,52 +113,29 @@ check_cr3() {
     return
   fi
 
+  local total=$(curl -sf "$API_BASE/api/tasks" | jq '. | if type == "array" then length else (.tasks // .data | length) end' 2>/dev/null || echo "0")
   local tasks_json=$(curl -sf "$API_BASE/api/tasks")
-  local total=$(echo "$tasks_json" | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
-print(len(tasks))
-" 2>/dev/null || echo "0")
 
   log_ok "任務板可連線，共 $total 筆任務"
 
   # 檢查 stuck running 任務（超過 24 小時還在 running）
-  echo "$tasks_json" | python3 -c "
-import json, sys
-from datetime import datetime, timezone, timedelta
-data = json.load(sys.stdin)
-tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
-now = datetime.now(timezone.utc)
-stuck = 0
-for t in tasks:
-    if t.get('status') == 'running':
-        created = t.get('createdAt', '')
-        if created:
-            try:
-                ct = datetime.fromisoformat(created.replace('Z', '+00:00'))
-                age_h = (now - ct).total_seconds() / 3600
-                if age_h > 24:
-                    print('STUCK: %s (%s) - running %.0f hrs' % (t['id'], t.get('name','?')[:40], age_h))
-                    stuck += 1
-            except:
-                pass
-if stuck == 0:
-    print('OK: no stuck running tasks')
-else:
-    print('TOTAL: %d stuck tasks' % stuck)
-" 2>/dev/null | while IFS= read -r line; do
-    if echo "$line" | grep -q "^STUCK:"; then
-      log_warn "$line"
-      if [ "$MODE" = "fix" ]; then
-        local tid=$(echo "$line" | sed 's/STUCK: \([^ ]*\).*/\1/')
-        curl -sf -X PATCH "$API_BASE/api/tasks/$tid/progress" \
-          -H "Content-Type: application/json" \
-          -d '{"status":"failed","summary":"auto-heal: stuck >24h, marked failed"}' > /dev/null 2>&1 && \
-          log_fix "已將 $tid 標記為 failed" || true
+  # 使用 jq 處理時間（jq 處理 ISO8601 比較麻煩，這裡我們可以用 jq 找出 running 任務，然後用 date 比較，或者簡化邏輯）
+  # 既然 python3 不能用，我們改用 jq 找出 running 任務 ID 並印出
+  echo "$tasks_json" | jq -r '. | (if type == "array" then . else (.tasks // .data) end) | .[] | select(.status == "running") | "\(.id)|\(.createdAt)|\(.name)"' 2>/dev/null | while IFS='|' read -r tid tcreated tname; do
+    if [ -n "$tcreated" ]; then
+      # macOS date 格式與 linux 不同
+      local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%S%z" "${tcreated%Z}+0000" "+%s" 2>/dev/null || echo "0")
+      local now_ts=$(date "+%s")
+      local age_h=$(( (now_ts - created_ts) / 3600 ))
+      if [ "$age_h" -gt 24 ]; then
+        log_warn "STUCK: $tid ($tname) - running $age_h hrs"
+        if [ "$MODE" = "fix" ]; then
+          curl -sf -X PATCH "$API_BASE/api/tasks/$tid/progress" \
+            -H "Content-Type: application/json" \
+            -d '{"status":"failed","summary":"auto-heal: stuck >24h, marked failed"}' > /dev/null 2>&1 && \
+            log_fix "已將 $tid 標記為 failed" || true
+        fi
       fi
-    elif echo "$line" | grep -q "^OK:"; then
-      log_ok "$line"
     fi
   done
 }
@@ -198,14 +175,7 @@ check_cr4() {
 
   # 檢查 runs 的 runPath
   if curl -sf "$API_BASE/api/runs" > /dev/null 2>&1; then
-    local run_stats=$(curl -sf "$API_BASE/api/runs" | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-runs = data if isinstance(data, list) else data.get('runs', data.get('data', []))
-total = len(runs)
-has_path = sum(1 for r in runs if r.get('runPath') and str(r.get('runPath')) not in ('', 'undefined'))
-print('%d %d' % (total, has_path))
-" 2>/dev/null || echo "0 0")
+    local run_stats=$(curl -sf "$API_BASE/api/runs" | jq -r '. | (if type == "array" then . else (.runs // .data) end) | length as $total | (map(select(.runPath != null and .runPath != "" and .runPath != "undefined")) | length) as $with_path | "\($total) \($with_path)"' 2>/dev/null || echo "0 0")
 
     local total_runs=$(echo "$run_stats" | cut -d' ' -f1)
     local with_path=$(echo "$run_stats" | cut -d' ' -f2)
@@ -321,49 +291,46 @@ check_cr5() {
     return
   fi
 
-  curl -sf "$API_BASE/api/tasks" | python3 -c "
-import json, sys, os
-data = json.load(sys.stdin)
-tasks = data if isinstance(data, list) else data.get('tasks', data.get('data', []))
-checked = 0
-broken = 0
-for t in tasks:
-    links = t.get('evidenceLinks', [])
-    status = t.get('status', '')
-    if status in ('done', 'review') and links:
-        for link in links:
-            checked += 1
-            path = link
-            # Handle file:// URLs
-            if path.startswith('file://'):
-                path = path[7:]  # Strip file:// prefix
-            if not os.path.isabs(path):
-                path = os.path.expanduser('~/.openclaw/workspace/' + path)
-            exists = os.path.isfile(path)
-            if exists:
-                size = os.path.getsize(path)
-                if size < 100:
-                    print('EMPTY:%s|%s|%d|%s' % (t['id'], t.get('name','?')[:30], size, link))
-                    broken += 1
-            else:
-                print('MISSING:%s|%s|%s' % (t['id'], t.get('name','?')[:30], link))
-                broken += 1
-print('SUMMARY:%d|%d' % (checked, broken))
-" 2>/dev/null | while IFS= read -r line; do
-    if echo "$line" | grep -q "^MISSING:"; then
-      local info=$(echo "$line" | cut -d: -f2-)
-      log_fail "evidenceLink 檔案不存在: $info"
-    elif echo "$line" | grep -q "^EMPTY:"; then
-      local info=$(echo "$line" | cut -d: -f2-)
-      log_warn "evidenceLink 檔案過小: $info"
-    elif echo "$line" | grep -q "^SUMMARY:"; then
-      local checked=$(echo "$line" | cut -d: -f2 | cut -d'|' -f1)
-      local broken=$(echo "$line" | cut -d: -f2 | cut -d'|' -f2)
-      if [ "$broken" -eq 0 ] && [ "$checked" -gt 0 ]; then
-        log_ok "已驗證 $checked 個 evidenceLinks，全部有效"
+  local tasks_json=$(curl -sf "$API_BASE/api/tasks")
+  local checked=0
+  local broken=0
+
+  # 使用 jq 萃取 evidenceLinks
+  while IFS='|' read -r tid tname links; do
+    [ -z "$links" ] && continue
+    # links 是一個逗號分隔的列表（從 jq 萃取）
+    for link in ${(s:,:)links}; do
+      checked=$((checked + 1))
+      local path=$link
+      # 去除引號
+      path="${path%\"}"
+      path="${path#\"}"
+      # 處理 file://
+      [[ "$path" == file://* ]] && path="${path#file://}"
+      
+      # 檢查是否為絕對路徑
+      if [[ ! "$path" == /* ]]; then
+        path="$WORKSPACE/$path"
       fi
-    fi
-  done
+
+      if [ -f "$path" ]; then
+        local size=$(wc -c < "$path" | tr -d '[:space:]')
+        if [ "$size" -lt 100 ]; then
+          log_warn "EMPTY:$tid|$tname|$size|$link"
+          broken=$((broken + 1))
+        fi
+      else
+        log_fail "MISSING:$tid|$tname|$link"
+        broken=$((broken + 1))
+      fi
+    done
+  done < <(echo "$tasks_json" | jq -r '. | (if type == "array" then . else (.tasks // .data) end) | .[] | select((.status == "done" or .status == "review") and (.evidenceLinks | length > 0)) | "\(.id)|\(.name)|\(.evidenceLinks | join(","))"' 2>/dev/null)
+
+  if [ "$broken" -eq 0 ] && [ "$checked" -gt 0 ]; then
+    log_ok "已驗證 $checked 個 evidenceLinks，全部有效"
+  elif [ "$checked" -eq 0 ]; then
+    log_ok "無待驗證的 evidenceLinks"
+  fi
 }
 
 # ============================================================

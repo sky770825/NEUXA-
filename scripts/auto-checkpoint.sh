@@ -76,4 +76,10 @@ for f in $(find "$SESSIONS_DIR" -name "*.jsonl" -mmin -15 2>/dev/null); do
   fi
 done
 
+# ============================================================
+# 4. 記憶清理 (Memory Vacuum)
+# ============================================================
+log "🧹 執行 Memory Vacuum..."
+bash "$WORKSPACE/scripts/memory-vacuum.sh" >> "$LOG_FILE" 2>&1
+
 log "✅ auto-checkpoint 檢查完成"

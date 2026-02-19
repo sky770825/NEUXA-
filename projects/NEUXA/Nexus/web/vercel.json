@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "name": "neuxa-nexus-landing",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

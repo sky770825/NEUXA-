@@ -333,13 +333,25 @@ main() {
         exit 0
     fi
 
-    # 詢問用戶確認
-    echo ""
-    read -p "是否開始自動修復？[Y/n] " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]] && [[ -n $REPLY ]]; then
-        log_info "用戶取消修復"
-        exit 0
+    # 檢查是否為自動模式
+    local auto_mode=false
+    for arg in "$@"; do
+        if [[ "$arg" == "--auto" ]]; then
+            auto_mode=true
+        fi
+    done
+
+    if ! $auto_mode; then
+        # 詢問用戶確認
+        echo ""
+        read -p "是否開始自動修復？[Y/n] " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]] && [[ -n $REPLY ]]; then
+            log_info "用戶取消修復"
+            exit 0
+        fi
+    else
+        log_info "檢測到 --auto 旗標，開始自動修復..."
     fi
 
     # 執行修復

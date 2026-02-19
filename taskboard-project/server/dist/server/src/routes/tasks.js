@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { logger } from "../utils/logger.js";
 let tasks = [
     {
         id: "1",
@@ -43,6 +44,7 @@ router.get("/:id", (req, res) => {
 router.post("/", (req, res) => {
     const { title, description, status = "ready" } = req.body;
     if (!title) {
+        logger.warn({ category: "tasks", action: "create" }, "Task creation failed: Title is required");
         res.status(400).json({ error: "Title is required" });
         return;
     }
@@ -55,6 +57,7 @@ router.post("/", (req, res) => {
         updatedAt: new Date().toISOString(),
     };
     tasks.push(newTask);
+    logger.info({ category: "tasks", action: "create", taskId: newTask.id }, "Task created successfully");
     res.status(201).json(newTask);
 });
 // PATCH /api/tasks/:id - Update a task
@@ -78,6 +81,7 @@ router.patch("/:id", (req, res) => {
 router.delete("/batch", (req, res) => {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
+        logger.warn({ category: "tasks", action: "batch_delete" }, "Batch delete failed: ids must be a non-empty array");
         res.status(400).json({ error: "ids must be a non-empty array" });
         return;
     }
@@ -92,6 +96,13 @@ router.delete("/batch", (req, res) => {
             notFoundIds.push(id);
         }
     });
+    logger.info({
+        category: "tasks",
+        action: "batch_delete",
+        deletedCount: deletedTasks.length,
+        requestedCount: ids.length,
+        notFoundCount: notFoundIds.length
+    }, "Tasks batch deleted");
     res.json({
         message: `Deleted ${deletedTasks.length} tasks`,
         deletedCount: deletedTasks.length,

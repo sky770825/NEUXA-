@@ -183,10 +183,11 @@ curl -s http://localhost:11434/api/generate \
 - 長報告用 RESULT.md 寫，Telegram/對話只發摘要
 - 絕對不要一次輸出超過 500 字的牆
 
-### Rate Limit 自救
-- API 回傳 429 / rate limit → 立即切換備用模型（Kimi → Ollama qwen3:8b）
-- 連續 2 次 rate limit → 用 Ollama 本地模型頂著，不要卡死
-- 自救後主動回報老蔡：「Gemini 被限速，暫時切到 XX」
+### Rate Limit 自救與節奏控管 (Pacing)
+- **節奏原則**：優先追求穩定而非速度。連續執行超過 3 個工具呼叫後，強制暫停 5 秒。
+- **子代理限制**：避免同時啟動超過 2 個高強度的子代理任務。
+- **API 回傳 429 / rate limit** → 立即暫停所有非本地操作 3 分鐘，並切換為 Ollama。
+- **本地優先**：診斷、寫檔、格式化等內部任務，優先指定 `ollama/qwen3`。
 
 ### 不卡在等人
 - 發出問題後，設 **3 分鐘 timeout**
@@ -231,12 +232,10 @@ curl -X POST http://localhost:3011/api/openclaw/red-alert \
 
 有新點子想做時，**必須先提案**，等老蔡批准才能動手。
 
-**5 種分類：**
+**3 種分類：**
 - `commercial` (商業💼)：客戶服務、銷售、房產相關
-- `system` (系統⚙️)：架構改進、效能優化
-- `tool` (工具🔧)：輔助工具、自動化腳本
-- `risk` (風險🛡️)：安全防護、災害預演
-- `creative` (創意💡)：學習、實驗、新想法
+- `system` (系統⚙️)：核心架構、自動化工具、安全、效能
+- `lab` (實驗💡)：學習研究、創意實驗、新技術試點
 
 **提案方式：**
 ```bash
@@ -244,7 +243,7 @@ curl -X POST http://localhost:3011/api/openclaw/proposal \
   -H 'Content-Type: application/json' \
   -d '{
     "title": "提案標題",
-    "category": "commercial | system | tool | risk | creative",
+    "category": "commercial | system | lab",
     "background": "為什麼要做這件事",
     "idea": "具體要做什麼",
     "goal": "做完後預期達成什麼",
@@ -372,7 +371,7 @@ curl -X POST http://localhost:3011/api/openclaw/proposal \
 每次新對話開始：
 
 ```
-1. 讀取 SOUL.md → USER.md → MEMORY.md（提取 Active Context）
+1. 讀取 BOOTSTRAP.md → SOUL.md → USER.md → MEMORY.md（提取 Active Context）
 2. 讀取 memory/HANDOFF-LATEST.md → 接續上次進度
 3. 檢查有沒有進行中的任務 → 主動提示老蔡
 4. 等待指令
@@ -408,9 +407,9 @@ PATCH http://localhost:3011/api/tasks/:id/progress
 **projectPath 對照表：**
 | 任務類型 | projectPath |
 |---------|-------------|
+| 核心系統 | `projects/openclaw/modules/infra/` |
 | 知識庫 | `projects/openclaw/modules/knowledge/` |
-| CRM | `projects/crm/modules/main/` |
-| 系統維護 | `projects/openclaw/modules/infra/` |
+| 應用開發 | `projects/apps/` |
 
 **RESULT.md 格式：**
 ```markdown
