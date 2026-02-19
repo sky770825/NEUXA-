@@ -85,6 +85,7 @@
             new BABYLON.PointLight('point', BABYLON.Vector3.Zero(), scene).intensity = 1.5;
             createStarfield(scene);
             Object.keys(planetData).forEach(key => createPlanet(scene, key, planetData[key]));
+            createStardust();
             setTimeout(() => document.getElementById('loading').classList.add('hidden'), 1000);
             return scene;
         };
@@ -123,7 +124,13 @@
             sphere.metadata = { key, data };
             planets[key] = sphere;
             sphere.actionManager = new BABYLON.ActionManager(scene);
-            sphere.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => showInfo(key)));
+            sphere.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                createParticleExplosion(sphere.position, data.color);
+                showInfo(key);
+            }));
+            
+            // 為核心星艦添加脈動效果
+            if(key === 'core') addPulsingEffect(glow, data.color);
         }
         function showInfo(key) {
             const data = planetData[key];
@@ -144,7 +151,86 @@
         }
         function resetCamera() { camera.setTarget(BABYLON.Vector3.Zero()); camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 80; }
         function toggleAutoRotate() { autoRotate = !autoRotate; camera.useAutoRotationBehavior = autoRotate; }
-        function toggleEnergyLines() { alert('能量線特效開發中 - 預計加入粒子流動效果'); }
+        let energyLinesVisible = false;
+        let energyLines = [];
+        
+        function createEnergyLines() {
+            const keys = Object.keys(planets).filter(k => k !== 'core');
+            keys.forEach(key => {
+                const planet = planets[key];
+                const line = BABYLON.MeshBuilder.CreateTube('energy_'+key, {
+                    path: [BABYLON.Vector3.Zero(), planet.position],
+                    radius: 0.02,
+                    updatable: true
+                }, scene);
+                const mat = new BABYLON.StandardMaterial('energyMat_'+key, scene);
+                mat.emissiveColor = planetData[key].color;
+                mat.alpha = 0.6;
+                line.material = mat;
+                line.isVisible = false;
+                energyLines.push({ mesh: line, target: planet, key: key });
+            });
+        }
+        
+        function toggleEnergyLines() {
+            if(energyLines.length === 0) createEnergyLines();
+            energyLinesVisible = !energyLinesVisible;
+            energyLines.forEach(el => {
+                el.mesh.isVisible = energyLinesVisible;
+            });
+        }
+        
+        function createParticleExplosion(position, color) {
+            const particleSystem = new BABYLON.ParticleSystem('particles', 200, scene);
+            particleSystem.particleTexture = new BABYLON.Texture('https://cdn.babylonjs.com/assets/flare.png', scene);
+            particleSystem.emitter = position;
+            particleSystem.minEmitBox = new BABYLON.Vector3(-0.5, -0.5, -0.5);
+            particleSystem.maxEmitBox = new BABYLON.Vector3(0.5, 0.5, 0.5);
+            particleSystem.color1 = new BABYLON.Color4(color.r, color.g, color.b, 1);
+            particleSystem.color2 = new BABYLON.Color4(color.r, color.g, color.b, 0);
+            particleSystem.minSize = 0.1;
+            particleSystem.maxSize = 0.5;
+            particleSystem.minLifeTime = 0.3;
+            particleSystem.maxLifeTime = 1.5;
+            particleSystem.emitRate = 100;
+            particleSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+            particleSystem.direction1 = new BABYLON.Vector3(-1, 1, -1);
+            particleSystem.direction2 = new BABYLON.Vector3(1, 1, 1);
+            particleSystem.minEmitPower = 1;
+            particleSystem.maxEmitPower = 3;
+            particleSystem.updateSpeed = 0.02;
+            particleSystem.targetStopDuration = 1;
+            particleSystem.start();
+            setTimeout(() => particleSystem.stop(), 1000);
+        }
+        
+        function createStardust() {
+            const stardust = new BABYLON.ParticleSystem('stardust', 1000, scene);
+            stardust.particleTexture = new BABYLON.Texture('https://cdn.babylonjs.com/assets/flare.png', scene);
+            stardust.emitter = new BABYLON.Vector3(0, 0, 0);
+            stardust.minEmitBox = new BABYLON.Vector3(-100, -50, -100);
+            stardust.maxEmitBox = new BABYLON.Vector3(100, 50, 100);
+            stardust.color1 = new BABYLON.Color4(1, 1, 1, 0.3);
+            stardust.color2 = new BABYLON.Color4(0.5, 0.8, 1, 0);
+            stardust.minSize = 0.05;
+            stardust.maxSize = 0.2;
+            stardust.minLifeTime = 5;
+            stardust.maxLifeTime = 10;
+            stardust.emitRate = 50;
+            stardust.gravity = new BABYLON.Vector3(0, 0.02, 0);
+            stardust.start();
+        }
+        
+        function addPulsingEffect(mesh, color) {
+            let alpha = 0.2;
+            let direction = 0.005;
+            scene.registerBeforeRender(() => {
+                alpha += direction;
+                if(alpha > 0.4) direction = -0.005;
+                if(alpha < 0.1) direction = 0.005;
+                if(mesh.material) mesh.material.alpha = alpha;
+            });
+        }
         scene = createScene();
         engine.runRenderLoop(function () {
             Object.keys(planets).forEach(key => {
@@ -158,6 +244,23 @@
                 }
                 planet.rotation.y += 0.01;
             });
+            
+            // 更新能量線位置
+            if(energyLinesVisible) {
+                energyLines.forEach(el => {
+                    const positions = [
+                        BABYLON.Vector3.Zero().x, BABYLON.Vector3.Zero().y, BABYLON.Vector3.Zero().z,
+                        el.target.position.x, el.target.position.y, el.target.position.z
+                    ];
+                    el.mesh = BABYLON.MeshBuilder.CreateTube('energy_'+el.key, {
+                        path: [BABYLON.Vector3.Zero(), el.target.position],
+                        radius: 0.02 + Math.sin(Date.now() * 0.003) * 0.01,
+                        updatable: true,
+                        instance: el.mesh
+                    }, scene);
+                });
+            }
+            
             scene.render();
         });
         window.addEventListener('resize', () => engine.resize());
