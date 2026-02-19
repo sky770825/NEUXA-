@@ -6,187 +6,216 @@
     <title>因果律 | 道法自然</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Noto Serif TC', 'SimSun', serif;
-            background: #0a0a0a;
-            color: #f5f5dc;
-            line-height: 2;
-        }
-        #hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background: radial-gradient(ellipse at top, #1a0000 0%, #0a0a0a 70%);
-            padding: 2rem;
-        }
-        .seal {
-            width: 100px;
-            height: 100px;
-            border: 3px solid #c41e3a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 3rem;
-            transform: rotate(5deg);
-            background: rgba(196,30,58,0.1);
-        }
-        .seal-text {
-            font-size: 2rem;
-            font-weight: 900;
-            color: #c41e3a;
-            writing-mode: vertical-rl;
-        }
-        .hero-title {
-            font-size: clamp(5rem, 18vw, 12rem);
-            font-weight: 900;
-            letter-spacing: 0.3em;
-            color: #d4af37;
-            text-shadow: 0 0 30px rgba(212,175,55,0.5);
-            margin-bottom: 1rem;
-        }
-        .dao-title {
-            font-size: clamp(1.5rem, 4vw, 2rem);
-            color: #c41e3a;
-            letter-spacing: 1em;
-            margin-bottom: 3rem;
-        }
-        .scripture {
-            font-size: 1.2rem;
-            max-width: 700px;
-            margin-bottom: 4rem;
-            border-left: 3px solid #d4af37;
-            padding-left: 2rem;
-            text-align: left;
-        }
-        .cta-button {
-            padding: 1.2rem 4rem;
-            background: transparent;
-            color: #d4af37;
-            text-decoration: none;
-            letter-spacing: 0.5em;
-            border: 2px solid #d4af37;
-            transition: all 0.5s ease;
-        }
-        .cta-button:hover {
-            background: #d4af37;
-            color: #0a0a0a;
-        }
-        #truth {
-            padding: 8rem 2rem;
-            background: #0f0f0f;
-        }
-        .section-header {
-            text-align: center;
-            margin-bottom: 5rem;
-        }
-        .section-title {
-            font-size: clamp(2rem, 5vw, 3rem);
-            color: #d4af37;
-            letter-spacing: 0.3em;
-            margin-bottom: 1rem;
-        }
-        .truth-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        .truth-card {
-            background: linear-gradient(135deg, rgba(42,42,42,0.5) 0%, rgba(10,10,10,0.8) 100%);
-            border: 1px solid rgba(212,175,55,0.2);
-            padding: 2.5rem;
-            position: relative;
-        }
-        .truth-card:hover {
-            border-color: #d4af37;
-        }
-        .card-number {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #c41e3a;
-            opacity: 0.3;
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-        }
-        .card-title {
-            font-size: 1.4rem;
-            color: #d4af37;
-            margin-bottom: 1rem;
-        }
-        footer {
-            padding: 4rem 2rem;
-            text-align: center;
-            border-top: 1px solid rgba(212,175,55,0.2);
-        }
+        :root { --ink-black: #0a0a0a; --cinnabar: #c41e3a; --gold: #d4af37; --paper: #f5f5dc; }
+        body { font-family: 'Noto Serif TC', serif; background: var(--ink-black); color: var(--paper); line-height: 2; }
+        nav { position: fixed; top: 0; left: 0; right: 0; padding: 1rem 2rem; background: rgba(10,10,10,0.95); border-bottom: 1px solid rgba(212,175,55,0.2); z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-size: 1.5rem; font-weight: 900; color: var(--gold); letter-spacing: 0.3em; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: rgba(245,245,220,0.8); text-decoration: none; font-size: 0.95rem; }
+        .nav-links a:hover { color: var(--gold); }
+        #hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: radial-gradient(ellipse at top, #1a0000 0%, var(--ink-black) 70%); padding: 6rem 2rem 2rem; }
+        .seal { width: 100px; height: 100px; border: 3px solid var(--cinnabar); display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; transform: rotate(5deg); background: rgba(196,30,58,0.1); }
+        .seal-text { font-size: 2rem; font-weight: 900; color: var(--cinnabar); writing-mode: vertical-rl; }
+        .hero-title { font-size: clamp(4rem, 15vw, 10rem); font-weight: 900; letter-spacing: 0.3em; color: var(--gold); text-shadow: 0 0 30px rgba(212,175,55,0.5); margin-bottom: 1rem; }
+        .dao-title { font-size: clamp(1.2rem, 3vw, 1.8rem); color: var(--cinnabar); letter-spacing: 0.8em; margin-bottom: 2rem; }
+        .hero-quote { font-size: 1.1rem; max-width: 700px; margin-bottom: 3rem; border-left: 3px solid var(--gold); padding-left: 2rem; text-align: left; }
+        .hero-buttons { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+        .cta-button { padding: 1rem 2.5rem; background: transparent; color: var(--gold); text-decoration: none; letter-spacing: 0.3em; border: 2px solid var(--gold); transition: all 0.5s ease; }
+        .cta-button:hover { background: var(--gold); color: var(--ink-black); }
+        .cta-button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--paper); }
+        #stories { padding: 6rem 2rem; background: #0f0f0f; }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-title { font-size: clamp(2rem, 5vw, 3rem); color: var(--gold); letter-spacing: 0.3em; margin-bottom: 1rem; }
+        .section-subtitle { color: rgba(245,245,220,0.6); }
+        .stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto 4rem; }
+        .story-card { background: rgba(26,26,26,0.8); border: 1px solid rgba(212,175,55,0.2); padding: 2rem; transition: all 0.3s ease; }
+        .story-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .story-category { display: inline-block; padding: 0.3rem 1rem; background: rgba(196,30,58,0.2); color: var(--cinnabar); font-size: 0.85rem; margin-bottom: 1rem; }
+        .story-title { font-size: 1.3rem; color: var(--gold); margin-bottom: 1rem; }
+        .story-preview { color: rgba(245,245,220,0.7); line-height: 1.8; margin-bottom: 1.5rem; }
+        .story-meta { display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px solid rgba(212,175,55,0.1); font-size: 0.9rem; color: rgba(245,245,220,0.5); }
+        #submit { padding: 6rem 2rem; background: linear-gradient(180deg, #0f0f0f 0%, rgba(196,30,58,0.05) 50%, #0f0f0f 100%); }
+        .form-container { max-width: 700px; margin: 0 auto; background: rgba(26,26,26,0.5); border: 1px solid rgba(212,175,55,0.2); padding: 3rem; }
+        .form-title { text-align: center; font-size: 1.8rem; color: var(--gold); margin-bottom: 0.5rem; }
+        .form-subtitle { text-align: center; color: rgba(245,245,220,0.6); margin-bottom: 3rem; }
+        .form-group { margin-bottom: 2rem; }
+        .form-label { display: block; color: var(--gold); margin-bottom: 0.5rem; }
+        .form-input, .form-textarea, .form-select { width: 100%; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(212,175,55,0.2); color: var(--paper); font-family: 'Noto Serif TC', serif; font-size: 1rem; }
+        .form-textarea { min-height: 200px; resize: vertical; }
+        .form-hint { font-size: 0.85rem; color: rgba(245,245,220,0.5); margin-top: 0.5rem; }
+        .submit-btn { width: 100%; padding: 1.2rem; background: var(--cinnabar); color: var(--paper); border: none; font-family: 'Noto Serif TC', serif; font-size: 1.1rem; letter-spacing: 0.3em; cursor: pointer; }
+        .submit-btn:hover { background: #a01830; }
+        #truth { padding: 6rem 2rem; background: var(--ink-black); }
+        .truth-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto; }
+        .truth-card { background: rgba(26,26,26,0.8); border: 1px solid rgba(212,175,55,0.2); padding: 2.5rem; position: relative; }
+        .truth-card:hover { border-color: var(--gold); }
+        .card-number { font-size: 3rem; font-weight: 900; color: var(--cinnabar); opacity: 0.3; position: absolute; top: 1rem; right: 1rem; }
+        .card-title { font-size: 1.4rem; color: var(--gold); margin-bottom: 1rem; }
+        .card-content { color: rgba(245,245,220,0.8); line-height: 2; }
+        footer { padding: 4rem 2rem; text-align: center; border-top: 1px solid rgba(212,175,55,0.2); background: var(--ink-black); }
+        .footer-quote { font-size: 1.3rem; color: var(--gold); margin-bottom: 2rem; }
+        @media (max-width: 768px) { .nav-links { display: none; } .hero-title { letter-spacing: 0.1em; } .form-container { padding: 2rem 1.5rem; } .stories-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <section id="hero">
-        <div class="seal">
-            <span class="seal-text">正道</span>
+    <nav>
+        <div class="nav-logo">因果律</div>
+        <div class="nav-links">
+            <a href="#truth">四象天道</a>
+            <a href="#stories">真實案例</a>
+            <a href="#submit">投稿分享</a>
         </div>
+    </nav>
+
+    <section id="hero">
+        <div class="seal"><span class="seal-text">正道</span></div>
         <h1 class="hero-title">因果</h1>
         <p class="dao-title">天地運作之鐵律</p>
-        <p class="scripture">
-            天地不仁，以萬物為芻狗。<br>
-            因果不爽，絲毫無差。<br>
-            你種何因，必收何果。<br>
-            非有審判，唯法爾如然。
-        </p>
-        <a href="#truth" class="cta-button">參悟天道</a>
+        <p class="hero-quote">天地不仁，以萬物為芻狗。<br>因果不爽，絲毫無差。<br>你種何因，必收何果。</p>
+        <div class="hero-buttons">
+            <a href="#stories" class="cta-button primary">閱讀真實案例</a>
+            <a href="#submit" class="cta-button">分享你的故事</a>
+        </div>
+    </section>
+
+    <section id="stories">
+        <div class="section-header">
+            <h2 class="section-title">真實案例</h2>
+            <p class="section-subtitle">信眾親身經歷，見證天道循環</p>
+        </div>
+        <div class="stories-grid">
+            <div class="story-card">
+                <span class="story-category">職場因果</span>
+                <h3 class="story-title">為升遷羞辱同事，三個月後我被裁員</h3>
+                <p class="story-preview">我為了升遷，在code review時公開羞辱了一位資深工程師。三個月後，我被裁員了。那位工程師後來成了新公司的CTO...</p>
+                <div class="story-meta"><span>@工程師小明</span><span>2024.12.15</span></div>
+            </div>
+            <div class="story-card">
+                <span class="story-category">感情因果</span>
+                <h3 class="story-title">劈腿三年後，我得到了報應</h3>
+                <p class="story-preview">我曾同時交往三個女生，覺得自己很有魅力。五年後，我真心愛上的一個人，用同樣的方式背叛了我...</p>
+                <div class="story-meta"><span>@匿名</span><span>2024.12.10</span></div>
+            </div>
+            <div class="story-card">
+                <span class="story-category">金錢因果</span>
+                <h3 class="story-title">貪小便宜的代價：我損失了三百萬</h3>
+                <p class="story-preview">為了省一萬元的檢驗費，我買了有問題的原料。結果產品全部報廢，賠償客戶損失三百萬...</p>
+                <div class="story-meta"><span>@工廠老闆</span><span>2024.12.05</span></div>
+            </div>
+            <div class="story-card">
+                <span class="story-category">善因善果</span>
+                <h3 class="story-title">隨手幫的一個忙，救了我全家的命</h3>
+                <p class="story-preview">下雨天順路載了一位老人回家。三個月後，那老人的兒子成為我的大客戶，讓我度過了公司破產危機...</p>
+                <div class="story-meta"><span>@貿易商阿華</span><span>2024.11.28</span></div>
+            </div>
+            <div class="story-card">
+                <span class="story-category">健康因果</span>
+                <h3 class="story-title">五年熬夜，身體給了我最嚴重的警告</h3>
+                <p class="story-preview">連續五年每天睡四小時，以為年輕沒關係。三十歲那年，我在會議室突然昏倒，醒來時人在加護病房...</p>
+                <div class="story-meta"><span>@行銷主管</span><span>2024.11.20</span></div>
+            </div>
+            <div class="story-card">
+                <span class="story-category">親情因果</span>
+                <h3 class="story-title">不孝的代價：我失去了見母親最後一面的機會</h3>
+                <p class="story-preview">年輕時覺得父母煩，常年不回家。直到母親突然離世，我才發現她床頭一直放著我的照片，和寫給我但沒寄出的信...</p>
+                <div class="story-meta"><span>@海外遊子</span><span>2024.11.15</span></div>
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <a href="#" class="cta-button" onclick="alert('更多案例即將公開')">查看更多案例</a>
+        </div>
+    </section>
+
+    <section id="submit">
+        <div class="form-container">
+            <h2 class="form-title">分享你的因果故事</h2>
+            <p class="form-subtitle">真實案例，啟迪世人。可選擇匿名或具名。</p>
+            <form id="storyForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">你的名字 *</label>
+                    <input type="text" class="form-input" placeholder="可填真名或化名，如：王小明 或 匿名" required>
+                    <p class="form-hint">若選擇匿名，我們將保護您的隱私</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">聯絡方式 *</label>
+                    <input type="text" class="form-input" placeholder="Email 或 LINE ID（僅供編輯聯繫確認）" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">故事類別 *</label>
+                    <select class="form-select" required>
+                        <option value="">請選擇類別</option>
+                        <option value="career">職場因果</option>
+                        <option value="relationship">感情因果</option>
+                        <option value="money">金錢因果</option>
+                        <option value="health">健康因果</option>
+                        <option value="family">親情因果</option>
+                        <option value="good">善因善果</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">故事標題 *</label>
+                    <input type="text" class="form-input" placeholder="簡短有力的標題，如：「為了省錢，我損失了十倍」" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">你的故事 *</label>
+                    <textarea class="form-textarea" placeholder="請詳細描述：&#10;1. 當時的情境&#10;2. 你做了什麼選擇（因）&#10;3. 後來發生了什麼（果）&#10;4. 你的省思與領悟&#10;&#10;字數建議：500-2000字" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">時間與地點</label>
+                    <input type="text" class="form-input" placeholder="如：2023年，台北">
+                    <p class="form-hint">增加真實性的細節，可選填</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" required> 我確認以上內容為真實經歷，並同意公開分享 *
+                    </label>
+                </div>
+                <button type="submit" class="submit-btn">提交故事</button>
+            </form>
+        </div>
     </section>
 
     <section id="truth">
         <div class="section-header">
             <h2 class="section-title">四象天道</h2>
-            <p style="color: rgba(245,245,220,0.6);">道法自然，因果循環</p>
+            <p class="section-subtitle">道法自然，因果循環</p>
         </div>
         <div class="truth-grid">
             <div class="truth-card">
                 <span class="card-number">壹</span>
                 <h3 class="card-title">⚡ 天行有常</h3>
-                <p style="color: rgba(245,245,220,0.8);">
-                    作用力與反作用力，等大反向。推牆者，牆必反推。<br><br>
-                    作惡者，惡氣纏身；行善者，善氣環繞。
-                </p>
+                <p class="card-content">作用力與反作用力，等大反向。推牆者，牆必反推。作惡者，惡氣纏身；行善者，善氣環繞。</p>
             </div>
             <div class="truth-card">
                 <span class="card-number">貳</span>
                 <h3 class="card-title">📜 信息不滅</h3>
-                <p style="color: rgba(245,245,220,0.8);">
-                    你以為刪除者，唯標記為隱藏耳。每個念頭，改變大腦神經。<br><br>
-                    信息永不消失，唯轉換其形。
-                </p>
+                <p class="card-content">你以為刪除者，唯標記為隱藏耳。每個念頭，改變大腦神經。信息永不消失，唯轉換其形。</p>
             </div>
             <div class="truth-card">
                 <span class="card-number">參</span>
                 <h3 class="card-title">🌊 共振相應</h3>
-                <p style="color: rgba(245,245,220,0.8);">
-                    你播何頻率，必收何共振。善意生信任，惡意生防禦。<br><br>
-                    系統記憶你的行為模式。
-                </p>
+                <p class="card-content">你播何頻率，必收何共振。善意生信任，惡意生防禦。系統記憶你的行為模式。</p>
             </div>
             <div class="truth-card">
                 <span class="card-number">肆</span>
                 <h3 class="card-title">⏳ 時至必應</h3>
-                <p style="color: rgba(245,245,220,0.8);">
-                    短期不見果，非無因果，乃時未至也。<br><br>
-                    莫因暫無報而為惡，莫因暫無賞而怠善。
-                </p>
+                <p class="card-content">短期不見果，非無因果，乃時未至也。莫因暫無報而為惡，莫因暫無賞而怠善。</p>
             </div>
         </div>
     </section>
 
     <footer>
-        <p style="font-size: 1.3rem; color: #d4af37; margin-bottom: 1rem;">
-            「天地不判斷，只執行。而此，即為最大慈悲。」
-        </p>
+        <p class="footer-quote">「天地不判斷，只執行。<br>而此，即為最大慈悲。」</p>
         <p style="color: rgba(245,245,220,0.5);">因果律 | 道法自然</p>
     </footer>
+
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('感謝您的投稿！\n\n我們會在3-5個工作天內審核您的故事。\n若獲選，將以Email或LINE通知您。\n\n願您的故事啟迪更多人。');
+            document.getElementById('storyForm').reset();
+        }
+    </script>
 </body>
 </html>
