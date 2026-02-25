@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEUXA Lite 下載中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #e5e5e5; }
+        .gradient-text { background: linear-gradient(90deg, #4f46e5, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .download-btn { background: linear-gradient(90deg, #4f46e5, #06b6d4); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-2xl w-full">
+        <!-- Logo -->
+        <div class="text-center mb-12">
+            <div class="text-4xl font-bold tracking-tighter mb-2">NEU<span class="text-indigo-500">XA</span> 🚀</div>
+            <div class="text-gray-500">精算未來的星艦代理人</div>
+        </div>
+
+        <!-- 驗證狀態 -->
+        <div id="status-box" class="bg-gray-800/50 border border-gray-700 rounded-2xl p-8 text-center">
+            <div id="loading" class="py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                <p class="text-gray-400">正在驗證您的下載權限...</p>
+            </div>
+
+            <div id="valid" class="hidden">
+                <div class="text-6xl mb-4">✅</div>
+                <h2 class="text-2xl font-bold mb-4 gradient-text">驗證成功</h2>
+                <p class="text-gray-400 mb-6">歡迎使用 NEUXA Lite！請選擇您的作業系統版本。</p>
+                
+                <!-- 一鍵安裝 -->
+                <div class="bg-gradient-to-r from-indigo-600 to-cyan-600 rounded-xl p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-3">🚀 一鍵安裝 (推薦)</h3>
+                    <p class="text-sm opacity-90 mb-4">複製以下指令，貼到 Terminal 即可安裝</p>
+                    <div class="bg-black/30 rounded-lg p-3 font-mono text-sm text-green-400 overflow-x-auto">
+                        curl -fsSL https://neuxa.io/install | bash
+                    </div>
+                    <button onclick="copyInstall()" class="mt-3 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition">
+                        📋 複製指令
+                    </button>
+                </div>
+
+                <!-- 手動下載 -->
+                <div class="grid md:grid-cols-2 gap-4 mb-6">
+                    <a href="/files/neuxa-lite-v1.0.0-mac.dmg" class="bg-gray-700 hover:bg-gray-600 text-white p-4 rounded-xl font-bold transition">
+                        <div class="text-2xl mb-2">🍎</div>
+                        <div>macOS 安裝包</div>
+                        <div class="text-sm opacity-75 font-normal">Apple Silicon & Intel</div>
+                    </a>
+                    <a href="#" onclick="alert('Windows 版本開發中')" class="bg-gray-800 text-gray-500 p-4 rounded-xl font-bold cursor-not-allowed">
+                        <div class="text-2xl mb-2">🪟</div>
+                        <div>Windows 版本</div>
+                        <div class="text-sm opacity-75 font-normal">即將推出</div>
+                    </a>
+                </div>
+
+                <div class="bg-gray-900/50 rounded-xl p-4 text-left text-sm">
+                    <h3 class="font-bold mb-2 text-indigo-400">📋 安裝說明</h3>
+                    <ol class="text-gray-400 space-y-1 list-decimal list-inside">
+                        <li>下載對應版本的安裝包</li>
+                        <li>解壓縮檔案</li>
+                        <li>雙擊 <code class="bg-gray-700 px-2 py-0.5 rounded">install.command</code> (Mac) 或 <code class="bg-gray-700 px-2 py-0.5 rounded">install.exe</code> (Windows)</li>
+                        <li>等待安裝完成，執行 <code class="bg-gray-700 px-2 py-0.5 rounded">neuxa</code> 啟動</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="invalid" class="hidden">
+                <div class="text-6xl mb-4">❌</div>
+                <h2 class="text-2xl font-bold mb-4 text-red-400">驗證失敗</h2>
+                <p class="text-gray-400 mb-6">此下載連結無效或已過期。</p>
+                <a href="https://line.me/R/ti/p/@740ihcar" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold transition">
+                    聯繫客服
+                </a>
+            </div>
+        </div>
+
+        <!-- 頁腳 -->
+        <div class="text-center mt-8 text-gray-600 text-sm">
+            <p>© 2026 NEUXA - Actuating the Future</p>
+            <p class="mt-2">需要協助？加入 LINE <a href="https://line.me/R/ti/p/@740ihcar" class="text-indigo-400 hover:underline">@740ihcar</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 解析 URL 參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // 複製安裝指令
+        function copyInstall() {
+            const cmd = 'curl -fsSL https://neuxa.io/install | bash';
+            navigator.clipboard.writeText(cmd).then(() => {
+                alert('✅ 已複製到剪貼簿！');
+            }).catch(() => {
+                // 備用方案
+                const textarea = document.createElement('textarea');
+                textarea.value = cmd;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ 已複製到剪貼簿！');
+            });
+        }
+
+        // 模擬驗證（實際應連接後端 API）
+        setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+            
+            // 方案 A：開放下載，不需要 token
+            document.getElementById('valid').classList.remove('hidden');
+            
+            // 如需驗證，取消上面那行，啟用下面這段：
+            // if (token && token.length > 10) {
+            //     document.getElementById('valid').classList.remove('hidden');
+            // } else {
+            //     document.getElementById('invalid').classList.remove('hidden');
+            // }
+        }, 1000);
+    </script>
+</body>
+</html>
