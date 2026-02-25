@@ -42,6 +42,6 @@ fi
 echo "=== 巡檢完成 ===" >> $LOG_FILE
 
 # 輸出摘要給 Telegram（如有異常）
-if [ "$DRAFT_COUNT" -gt 50 ] || [ "$NONCOMP_COUNT" -gt 20 ]; then
+if [ "$DRAFT_COUNT" -gt 100 ] || [ "$NONCOMP_COUNT" -gt 50 ]; then
   echo "⚠️ 任務板異常：$DRAFT_COUNT draft, $NONCOMP_COUNT noncompliant" | tee -a $LOG_FILE
 fi

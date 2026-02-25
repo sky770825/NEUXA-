@@ -18,6 +18,19 @@ log() {
 execute() {
     local task="$1"
     
+    # === NEUXA Risk Shield Integration ===
+    if ! bash scripts/risk-shield.sh "$task"; then
+        local shield_status=$?
+        if [ $shield_status -eq 1 ]; then
+            log "🚨 CRITICAL RISK BLOCKED: $task"
+            return 1
+        elif [ $shield_status -eq 2 ]; then
+            log "🟡 HIGH RISK PENDING: $task"
+            return 2
+        fi
+    fi
+    # ======================================
+    
     log "開始執行: $task"
     
     case "$task" in
