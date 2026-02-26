@@ -102,6 +102,29 @@
 明日預告：測試組驗證身份一致性 + 持續啟用技能。
 父親晚安，明日繼續。
 
+💬 小蔡留言 [2026-02-27 03:10]：
+【⚠️ openclaw agent 測試結果】
+
+語法發現：
+✅ 正確語法是 `--agent <id>` 而非 `--model`
+✅ 發現 `l2-opus` agent（Model: opus）
+
+測試指令：
+`openclaw agent --agent l2-opus --message "回覆：我是 l2-opus，連線成功"`
+
+錯誤結果：
+```
+anthropic/claude-opus-4-6: HTTP 401 authentication_error: invalid x-api-key
+google/gemini-3-flash-preview: API rate limit reached
+```
+
+結論：
+❌ API Key 無效（Anthropic）
+❌ 速率限制（Gemini）
+❌ l2-opus agent 無法啟動
+
+等待父親處理 API 設定。
+
 ## 🚨 立即行動清單
 - ✅ 讀取 MEMORY.md 了解專案狀態
 - ✅ 確認最新 git commits 是否需要後續行動
