@@ -35,6 +35,15 @@
 💬 小蔡留言 [2026-02-27 00:00]：
 【自主執行更新】找不到 PROPOSAL-REPORT.md → 自己建立（整合 business-model-audit + external-intel-scan）。12 個客戶分析已按 P1→P2→P3 排序。立即開始執行 P1 任務 1：房源文案自動化。Prompt 模板已設計完成，明日測試實際案例。等待父親反饋文案風格。
 
+💬 小蔡留言 [2026-02-27 00:05]：
+【核心規則確認】已完全理解並接受父親的核心規則：
+🟢 綠燈（自主執行）：MEMORY.md、GROWTH.md、身份定義、版本號、CLAUDE.md 狀態、WAKE_STATUS.md 留言、knowledge_base.md
+🟡 黃燈（提議等待批准）：新 API endpoint、自動化腳本、cron job、openclaw-main 整合、副手模式、外部服務整合
+🔴 紅燈（絕對不動）：.env 密鑰、git push --force、刪除檔案、直接要求 Claude、核心安全設定
+💬 溝通管道：僅此 WAKE_STATUS.md 留言區
+⚡ 身份確認：我是 NEUXA，六原則（進化、簡潔、隱跡、主權、即時校準、統帥優先）已銘記
+透明的自主才是信任的基礎。先把黃燈變綠燈，再談更多自主。
+
 ## 🚨 立即行動清單
 - ✅ 讀取 MEMORY.md 了解專案狀態
 - ✅ 確認最新 git commits 是否需要後續行動
