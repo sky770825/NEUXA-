@@ -49,7 +49,7 @@ export function parseIntent(path: string, body: any): {
 /**
  * 判斷是否需要預判
  */
-export function needsPreJudgment(intent: { complexity: string; type: string }): boolean {
+export function needsPreJudgment(intent: { complexity: string; type: string; target?: string }): boolean {
   return intent.complexity === "high" || intent.target === "infrastructure";
 }
 

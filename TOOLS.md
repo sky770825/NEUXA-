@@ -1,40 +1,36 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Local Notes & Overrides
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+This file contains my verified, ground-truth understanding of the tools available in this specific environment. It overrides any outdated knowledge from my base training.
 
-## What Goes Here
-
-Things like:
-
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
-
-## Examples
-
-```markdown
-### Cameras
-
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
-```
-
-## Why Separate?
-
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+**Last Synced:** 2026-02-26
 
 ---
 
-Add whatever helps you do your job. This is your cheat sheet.
+## `openclaw` CLI v2026.2.24 - Core Commands
+
+### Spawning a Sub-Agent
+
+The primary command to spawn a sub-agent is `openclaw agent`. The legacy `spawn` command is **DEPRECATED AND REMOVED**.
+
+**Correct Syntax:**
+`openclaw agent --model <model_id> --thinking <label> -m "<message>"`
+
+**Key Parameters:**
+- `--model <model_id>`: (Optional) Specifies the model to use. For L2 tasks, this should be `'anthropic/claude-opus-4-6'`.
+- `--thinking <label>`: (Optional) Sets a descriptive label for the agent's task, visible in logs and status.
+- `-m, --message <text>`: (**Required**) The prompt or task description for the agent.
+
+**Example:**
+```shell
+openclaw agent --model 'anthropic/claude-opus-4-6' --thinking '💬 | L2 | Task Name' -m "Your detailed task description here."
+```
+
+---
+### Other Core Commands
+
+- **`sessions`**: Used to list and manage conversation sessions.
+- **`message`**: Used for all channel-related actions (send, react, poll, etc.).
+- **`cron`**: Manages scheduled tasks.
+- **`update`**: Manages OpenClaw self-updates.
+
+This knowledge base is now the single source of truth for CLI operations.

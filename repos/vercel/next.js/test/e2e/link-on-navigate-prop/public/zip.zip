@@ -1,2 +1,3 @@
-// This is a stub file to simulate a downloadable zip file
-// Used in download link tests to verify onClick/onNavigate behavior
+version https://git-lfs.github.com/spec/v1
+oid sha256:a31bb0e5e4f80b2209bc2e9a10cfbab4ae961054296f944888a16ebe901767f1
+size 127

@@ -106,7 +106,7 @@ async function callQwen3(prompt: string): Promise<string> {
     throw new Error(`Ollama API error: ${response.status}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as any;
   return data.response || "";
 }
 
@@ -155,7 +155,7 @@ export async function checkPreJudgeHealth(): Promise<{
       method: "GET",
     });
 
-    const models = await response.json();
+    const models = await response.json() as any;
     const modelAvailable =
       models.models?.some((m: any) => m.name === QWEN_MODEL) ?? false;
 

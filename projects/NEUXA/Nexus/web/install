@@ -108,6 +108,7 @@ show_help() {
     echo "命令:"
     echo "  start       啟動 NEUXA 核心"
     echo "  status      查看系統狀態"
+    echo "  assist      開啟遠端協防連線 (需授權)"
     echo "  config      編輯設定檔"
     echo "  update      更新到最新版本"
     echo "  uninstall   移除 NEUXA"
@@ -116,6 +117,7 @@ show_help() {
     echo "範例:"
     echo "  neuxa start    # 啟動 NEUXA"
     echo "  neuxa status   # 查看狀態"
+    echo "  neuxa assist   # 開啟遠端工程師輔助連線"
 }
 
 check_ollama() {
@@ -147,6 +149,23 @@ case "${1:-}" in
         echo "📁 目錄狀態:"
         echo "   NEUXA_HOME: $NEUXA_HOME"
         ls -la "$NEUXA_HOME" 2>/dev/null | tail -n +4 | awk '{print "   - " $9 " (" $5 " bytes)"}'
+        ;;
+    assist)
+        show_logo
+        echo "🛡️  啟動遠端協防輔助模式..."
+        if ! command -v cloudflared &> /dev/null; then
+            echo "📦 正在安裝必要的連線套件..."
+            if [[ "$PLATFORM" == "Mac" ]]; then
+                brew install cloudflare/cloudflare/cloudflared || true
+            else
+                curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+                sudo dpkg -i cloudflared.deb || true
+            fi
+        fi
+        echo "🔗 正在建立加密隧道..."
+        echo "⚠️  請將下方的 URL 提供給 NEUXA 專員以進行維修："
+        echo ""
+        cloudflared tunnel --url http://localhost:5678
         ;;
     config)
         ${EDITOR:-nano} "$NEUXA_HOME/config.json"
@@ -195,7 +214,8 @@ cat > "$NEUXA_HOME/config.json" << EOF
   "features": {
     "local_ai": true,
     "vault": true,
-    "memory": true
+    "memory": true,
+    "remote_assist": true
   },
   "models": {
     "default": "ollama/qwen3:4b",
@@ -245,6 +265,7 @@ export PATH="$NEUXA_BIN:$PATH"
 echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}   ✅ NEUXA Lite 安裝成功！${NC}"
+echo -e "${GREEN}   已整合【遠端協防助理】模式${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "${BLUE}📋 下一步:${NC}"
@@ -255,11 +276,8 @@ echo ""
 echo "   2️⃣  驗證安裝:"
 echo -e "      ${YELLOW}neuxa help${NC}"
 echo ""
-echo "   3️⃣  查看狀態:"
-echo -e "      ${YELLOW}neuxa status${NC}"
-echo ""
-echo "   4️⃣ (可選) 安裝 Ollama 以啟用本地 AI:"
-echo -e "      ${YELLOW}curl -fsSL https://ollama.com/install.sh | sh${NC}"
+echo "   3️⃣  需要維修時執行:"
+echo -e "      ${YELLOW}neuxa assist${NC}"
 echo ""
 echo -e "${BLUE}💡 提示:${NC}"
 echo "   NEUXA Lite 是 OpenClaw 的輔助工具包"

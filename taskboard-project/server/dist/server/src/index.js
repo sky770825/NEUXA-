@@ -9,6 +9,8 @@ import { n8nRouter } from "./routes/n8n.js";
 import { telegramRouter } from "./routes/telegram.js";
 import { systemRouter } from "./routes/system.js";
 import { memoriesRouter } from "./routes/memories.js";
+import { researchCenterRouter } from "./routes/research-center.js";
+import { communityRouter } from "./routes/community.js";
 const app = express();
 const PORT = process.env.PORT || 3011;
 // ============================================================================
@@ -105,6 +107,8 @@ app.use("/api/n8n", n8nRouter);
 app.use("/api/telegram", telegramRouter);
 app.use("/api/system", systemRouter);
 app.use("/api/memories", memoriesRouter);
+app.use("/api/research", researchCenterRouter);
+app.use("/api/community", communityRouter);
 // ============================================================================
 // Error Handling
 // ============================================================================
@@ -122,13 +126,20 @@ app.use((err, _req, res, _next) => {
 // ============================================================================
 // Start server only if not in test mode
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         logger.info({ port: PORT, category: 'startup' }, `[OpenClaw] Server running on port ${PORT}`);
         logger.info({ origins: allowedOrigins, category: 'startup' }, `[OpenClaw] CORS Allowed Origins: ${allowedOrigins.join(", ")}`);
         if (process.env.TELEGRAM_ALLOW_ANY_CHAT === 'false') {
             logger.info({ category: 'startup' }, `[OpenClaw] Telegram security: Restricted to authorized chats only.`);
         }
-        logger.info({ category: 'startup' }, `[OpenClaw] Routes loaded: /api/tasks, /api/reviews, /api/n8n, /api/telegram, /api/system, /api/memories`);
+        logger.info({ category: 'startup' }, `[OpenClaw] Routes loaded: /api/tasks, /api/reviews, /api/n8n, /api/telegram, /api/system, /api/memories, /api/research`);
+    });
+    // Initialize WebSocket Server for Communication Deck
+    import('./services/websocket.js').then(({ initializeWebSocket }) => {
+        initializeWebSocket(server);
+        logger.info({ category: 'startup' }, '[OpenClaw] WebSocket Server & Firewall initialized');
+    }).catch(err => {
+        logger.error({ category: 'startup', error: err }, '[OpenClaw] Failed to initialize WebSocket Server');
     });
 }
 export default app;
