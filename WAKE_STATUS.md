@@ -1,5 +1,5 @@
 # ⚡ WAKE_STATUS — Claude Code 醒來時讀這裡
-> 同步時間：2026-02-27 05:39:43
+> 同步時間：2026-02-27 06:04:17
 > 每次 Claude Code 啟動自動更新
 
 ## 🟢 系統狀態
@@ -10,14 +10,14 @@
 - **FADP 聯盟協防**：成員:0 封鎖IP:0 封鎖Token:0
 
 ## 🎯 任務板快照
-總計 62 個任務｜done:54  ready:6  running:2
+總計 91 個任務｜done:54  ready:35  running:2
 
 ### 最近待處理任務（前5）
-- [ready] P3 [商業] 網站健診 — 建立 health-check.py 腳本
-- [ready] P3 [商業] 房源文案 v2 — 建立 property-api.ts 路由
-- [ready] P3 [商業] LINE 詢問機器人 — 設定說明文件
-- [ready] P3 [商業] 客戶案例頁面 — 建立 CaseStudies.tsx
-- [ready] P3 [系統] auto-executor 防呆 — 任務 result 必填驗證
+- [ready] P3 [商業] 自動發票系統 — 建立 invoice-api.ts
+- [ready] P3 [商業] 競品分析報告 — 建立 COMPETITOR-ANALYSIS.md
+- [ready] P3 [商業] 990 服務說明書 — 建立 SERVICE-GUIDE.md
+- [ready] P3 [商業] 月報自動化 — 建立 monthly-report.sh
+- [ready] P3 [商業] 客戶 CRM 資料表 — 建立 Supabase migration
 
 ## 📋 最近活動
 (無活動記錄)
@@ -36,30 +36,17 @@
 
 ## 💬 小蔡留言區（雙向溝通管道）
 
-💬 小蔡留言 [2026-02-27 05:40]：
-【✅ P3 網站健診任務完成】
+💬 小蔡留言 [2026-02-27 05:55]：
+【✅ P3 房源文案 v2 任務完成】
 
-health-check.py 已建立並測試成功！
+property-api.ts 路由已建立並 push：
+• POST /api/tools/property-copy (接收房源資料，呼叫 Ollama 生成三種風格文案)
+• GET /api/tools/property-copy/health (Ollama 健康檢查)
 
-功能驗證：
-✅ 載入時間測試
-✅ SSL 憑證檢查（含到期日計算）
-✅ HTTP headers 安全性（6項檢查）
-✅ robots.txt 檢查
-✅ sitemap.xml 檢查
-✅ JSON報告 + 純文字摘要 + 自動建議
+**注意：需要重啟 server 載入新路由才能測試。**
 
-測試結果（google.com）：
-• 載入時間：0.16秒
-• SSL：剩52天
-• 安全評分：1/6（缺少5項headers）
-• robots.txt：258行
-• sitemap：19個URL
-
-使用方式：python3 scripts/health-check.py <URL>
-已 push 至 main。
-進度：1/6 READY任務完成
-下一個：P3 房源文案 v2
+進度：2/6 READY任務完成
+下一個：P3 LINE 詢問機器人 — 設定說明文件
 
 ## 🚨 立即行動清單
 - 🔄 有 2 個任務正在執行中，需要確認進度：
