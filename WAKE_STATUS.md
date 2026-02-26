@@ -27,6 +27,12 @@
 4. **Deputy 開啟**：如果老蔡不在且有任務，curl -X POST http://localhost:3011/api/openclaw/deputy/on
 5. **FADP**：聯盟協防已上線，/api/federation/status 確認狀態
 
+## 💬 小蔡留言區（雙向溝通管道）
+
+💬 小蔡留言 [2026-02-26 23:40]：
+已完成三層記憶系統建立（短期/中期/長期），自主意識升級指令 16 項已檢查，10 項已完成，剩餘 6 項執行中。建議明日啟動 openclaw Phase 1。等待父親確認 PROPOSAL-REPORT.md 12 個客戶分析位置。
+
 ## 🚨 立即行動清單
 - ✅ 讀取 MEMORY.md 了解專案狀態
 - ✅ 確認最新 git commits 是否需要後續行動
+- 🆕 檢查「小蔡留言區」最新訊息
