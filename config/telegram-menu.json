@@ -56,17 +56,17 @@
           {
             "text": "⚡ Flash",
             "callback_data": "m:flash",
-            "description": "Gemini 3 Flash"
+            "description": "Gemini 2.5 Flash（主指揮）"
           },
           {
             "text": "🧠 Pro",
             "callback_data": "m:pro",
-            "description": "Gemini 3 Pro"
+            "description": "Gemini 2.5 Pro"
           },
           {
             "text": "🐣 Kimi",
             "callback_data": "m:kimi",
-            "description": "Kimi K2.5"
+            "description": "Kimi K2.5（備援指揮）"
           }
         ]
       },
@@ -76,7 +76,7 @@
           {
             "text": "🦊 Grok",
             "callback_data": "m:grok",
-            "description": "Grok 4.1"
+            "description": "Grok 4.1 Fast"
           },
           {
             "text": "🏠 Local",

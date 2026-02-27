@@ -2,6 +2,7 @@
   "version": "3.1",
   "enabled": true,
   "mode": "proactive",
+  "_notice": "這是設計規格文件，目前沒有系統在讀取它。實際執行用的是 server/src/routes/auto-executor.ts。此檔保留作為未來實作參考。",
   "description": "主動探索模式：掃描→決策→產生任務→執行（含風險分級備份）",
   "rules": {
     "summary": "主動掃描系統→自主決策→自動產生任務→分級備份→執行→寫入任務板",
